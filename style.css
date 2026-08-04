@@ -1,3 +1,7 @@
+/* ============================================================
+   SSPC Web Tools - 完成版
+   ============================================================ */
+
 * {
   margin: 0;
   padding: 0;
@@ -16,7 +20,7 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1100px;
   width: 100%;
   background: linear-gradient(160deg, #11181f, #080c11);
   border: 1px solid #1a2a3a;
@@ -25,11 +29,12 @@ body {
   box-shadow: 0 0 60px rgba(0, 100, 200, 0.06), inset 0 0 80px rgba(0,0,0,0.4);
 }
 
+/* ===== ヘッダー ===== */
 .header {
   text-align: center;
   border-bottom: 1px solid #1a2a3a;
   padding-bottom: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .header h1 {
@@ -48,51 +53,82 @@ body {
   margin-top: 4px;
 }
 
-.main-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
+/* ===== タブ ===== */
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
+  border-bottom: 1px solid #1a2a3a;
+  padding-bottom: 12px;
 }
 
-@media (max-width: 900px) {
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
+.tab-btn {
+  background: transparent;
+  border: 1px solid #1a2a3a;
+  border-radius: 8px;
+  padding: 10px 22px;
+  color: #5a7a8a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  letter-spacing: 0.5px;
 }
 
+.tab-btn:hover {
+  border-color: #3a7aaa;
+  color: #8ad0ff;
+  background: rgba(0, 120, 255, 0.05);
+}
+
+.tab-btn.active {
+  background: #1a2a3a;
+  border-color: #3a7aaa;
+  color: #8ad0ff;
+  box-shadow: 0 0 20px rgba(60, 180, 255, 0.05);
+}
+
+/* ===== タブコンテンツ ===== */
+.tab-content {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== カード ===== */
 .card {
   background: rgba(0, 120, 255, 0.03);
   border: 1px solid #1a2a3a;
   border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
 }
 
 .card h2 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  margin-bottom: 16px;
-  letter-spacing: 1px;
-  border-bottom: 1px solid #1a2a3a;
-  padding-bottom: 10px;
-}
-
-.main-card h2 {
   color: #6cb4ee;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
 }
 
-.checker-card {
-  background: rgba(255, 170, 50, 0.03);
-  border-color: #2a3a2a;
+.tab-desc {
+  color: #5a7a8a;
+  font-size: 13px;
+  margin-bottom: 18px;
 }
 
-.checker-card h2 {
-  color: #ffaa32;
-  border-bottom-color: #2a3a2a;
-}
-
+/* ===== フォーム ===== */
 .field {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 label {
@@ -163,6 +199,7 @@ textarea {
   flex-shrink: 0;
 }
 
+/* ===== アコーディオン ===== */
 .accordion {
   margin: 6px 0 4px;
   border: 1px solid #1a2a3a;
@@ -189,15 +226,6 @@ textarea {
   color: #8ad0ff;
 }
 
-.accordion-arrow {
-  transition: 0.3s;
-  font-size: 12px;
-}
-
-.accordion-header.active .accordion-arrow {
-  transform: rotate(90deg);
-}
-
 .accordion-body {
   display: none;
   padding: 12px 14px;
@@ -209,6 +237,71 @@ textarea {
   display: block;
 }
 
+/* ===== トグルスイッチ（アコーディオン内部） ===== */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0 12px 0;
+  border-bottom: 1px solid #1a2a3a;
+  margin-bottom: 12px;
+}
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a8a9a;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #2a2a3a;
+  border-radius: 12px;
+  transition: 0.3s;
+  border: 1px solid #3a3a4a;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 2px;
+  bottom: 2px;
+  background: #5a5a6a;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #1a4a6a;
+  border-color: #3a7aaa;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+  background: #8ad0ff;
+}
+
+/* ===== ボタン ===== */
 .actions {
   display: flex;
   gap: 10px;
@@ -267,18 +360,7 @@ button:active {
   color: #8ad0ff;
 }
 
-.poll-item {
-  background: rgba(0, 120, 255, 0.03);
-  border: 1px solid #1a2a3a;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 10px 0;
-}
-
-.poll-item .field {
-  margin-bottom: 8px;
-}
-
+/* ===== トークンチェッカー結果 ===== */
 .token-result {
   margin-top: 12px;
   padding: 10px 12px;
@@ -378,6 +460,20 @@ button:active {
 #lockedCount { color: #ffaa32; font-weight: 700; }
 #invalidCount { color: #ff6a6a; font-weight: 700; }
 
+/* ===== 投票アイテム ===== */
+.poll-item {
+  background: rgba(0, 120, 255, 0.03);
+  border: 1px solid #1a2a3a;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
+}
+
+.poll-item .field {
+  margin-bottom: 8px;
+}
+
+/* ===== ステータス & ログ ===== */
 .status {
   background: rgba(0, 120, 255, 0.04);
   border: 1px solid #1a2a3a;
@@ -385,7 +481,7 @@ button:active {
   padding: 10px 16px;
   color: #7a8a9a;
   font-size: 13px;
-  margin: 12px 0;
+  margin: 16px 0 12px;
   text-align: center;
   font-weight: 500;
 }
@@ -423,11 +519,13 @@ button:active {
 .log-success { color: #5ac8a0; }
 .log-info { color: #6cb4ee; }
 
+/* ===== レスポンシブ ===== */
 @media (max-width: 700px) {
   .container { padding: 14px; }
   .header h1 { font-size: 22px; }
+  .tabs { gap: 4px; }
+  .tab-btn { font-size: 11px; padding: 6px 12px; }
   .row { flex-direction: column; gap: 0; }
-  .main-grid { grid-template-columns: 1fr; gap: 16px; }
   .card { padding: 14px; }
   .actions button { flex: 1; font-size: 11px; padding: 6px 12px; }
 }
