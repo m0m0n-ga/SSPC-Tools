@@ -17,7 +17,7 @@
     <!-- ===== タブナビゲーション ===== -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="tabChecker">🔍 Token Checker</button>
-      <button class="tab-btn" data-tab="tabRaid">⚔️ Raid Tool</button>
+      <button class="tab-btn" data-tab="tabSpam">⚔️ Spam Tool</button>
     </div>
 
     <!-- ========================================================== -->
@@ -46,17 +46,17 @@
     </div>
 
     <!-- ========================================================== -->
-    <!-- タブ2: Raid Tool -->
+    <!-- タブ2: Spam Tool -->
     <!-- ========================================================== -->
-    <div id="tabRaid" class="tab-content">
+    <div id="tabSpam" class="tab-content">
       <div class="card">
-        <h2>⚔️ Raid Tool</h2>
+        <h2>⚔️ Spam Tool</h2>
         <p class="tab-desc">複数トークンでチャンネルへメッセージを送信、メンション、投票などをまとめて行えます。</p>
 
         <!-- ===== トークン ===== -->
         <div class="field">
           <label>トークン</label>
-          <textarea id="raidTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+          <textarea id="spamTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
         </div>
 
         <!-- ===== サーバーID ===== -->
@@ -153,7 +153,6 @@
             <div class="checkbox-group">
               <label><input type="checkbox" id="randomMention"> RANDOM MENTION</label>
             </div>
-            <button id="mentionStartBtn" class="btn-primary">👥 メンション実行</button>
           </div>
         </div>
 
@@ -217,7 +216,6 @@
                 </div>
               </div>
             </div>
-            <button id="pollStartBtn" class="btn-primary">📊 投票を実行</button>
           </div>
         </div>
 
