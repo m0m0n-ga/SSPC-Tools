@@ -255,7 +255,7 @@ document.getElementById('autoChannel').addEventListener('click', async function(
   }
 });
 
-// ----- サーバー退出（修正版） -----
+// ----- サーバー退出（apiCall 統一版） -----
 document.getElementById('leaveBtn').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -273,41 +273,12 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
     log(`🚪 退出試行 ${i+1}/${tokens.length}: ${tokenPreview}`, 'info');
 
     try {
-      const res = await fetch(`https://discord.com/api/v10/users/@me/guilds/${guildId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': token,
-          'User-Agent': 'SSPC-WebTools (https://github.com, 1.0)',
-          'Accept': 'application/json',
-        }
-      });
-
-      const responseText = await res.text();
-      log(`📡 退出レスポンス: HTTP ${res.status} - ${responseText || '（空）'}`, 'info');
-
-      if (res.ok) {
-        ok++;
-        log(`✅ 退出成功 (${i+1}/${tokens.length})`, 'success');
-      } else if (res.status === 400) {
-        fail++;
-        if (responseText.includes('50109')) {
-          log(`❌ 退出失敗: HTTP 400 - API仕様エラー（DELETEにContent-Typeを送信）`, 'error');
-        } else {
-          log(`❌ 退出失敗: HTTP 400 - サーバーIDが間違っているか、このサーバーに所属していません`, 'error');
-        }
-      } else if (res.status === 401) {
-        fail++;
-        log(`❌ 退出失敗: HTTP 401 - トークンが無効です`, 'error');
-      } else if (res.status === 403) {
-        fail++;
-        log(`❌ 退出失敗: HTTP 403 - 権限がありません`, 'error');
-      } else {
-        fail++;
-        log(`❌ 退出失敗: HTTP ${res.status}`, 'error');
-      }
+      await apiCall(token, `/users/@me/guilds/${guildId}`, 'DELETE');
+      ok++;
+      log(`✅ 退出成功 (${i+1}/${tokens.length})`, 'success');
     } catch (e) {
       fail++;
-      log(`❌ 退出失敗: ネットワークエラー - ${e.message}`, 'error');
+      log(`❌ 退出失敗: ${e.message}`, 'error');
     }
   }
 
