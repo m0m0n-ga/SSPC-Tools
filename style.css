@@ -1,7 +1,3 @@
-/* ============================================================
-   SSPC Web Tools - 2カラム + アコーディオン
-   ============================================================ */
-
 * {
   margin: 0;
   padding: 0;
@@ -10,9 +6,6 @@
 
 body {
   background: #0a0e14;
-  background-image: 
-    radial-gradient(ellipse at 20% 50%, rgba(0, 100, 200, 0.05) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 50%, rgba(0, 200, 255, 0.03) 0%, transparent 60%);
   color: #c8d0dc;
   font-family: 'Segoe UI', 'Arial', sans-serif;
   min-height: 100vh;
@@ -32,7 +25,6 @@ body {
   box-shadow: 0 0 60px rgba(0, 100, 200, 0.06), inset 0 0 80px rgba(0,0,0,0.4);
 }
 
-/* ===== ヘッダー ===== */
 .header {
   text-align: center;
   border-bottom: 1px solid #1a2a3a;
@@ -56,7 +48,6 @@ body {
   margin-top: 4px;
 }
 
-/* ===== 2カラムグリッド ===== */
 .main-grid {
   display: grid;
   grid-template-columns: 1fr 340px;
@@ -70,7 +61,6 @@ body {
   }
 }
 
-/* ===== カード ===== */
 .card {
   background: rgba(0, 120, 255, 0.03);
   border: 1px solid #1a2a3a;
@@ -79,7 +69,6 @@ body {
 }
 
 .card h2 {
-  color: #6cb4ee;
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 16px;
@@ -102,9 +91,8 @@ body {
   border-bottom-color: #2a3a2a;
 }
 
-/* ===== フォーム要素 ===== */
 .field {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 label {
@@ -116,13 +104,7 @@ label {
   letter-spacing: 0.5px;
 }
 
-.hint {
-  font-size: 11px;
-  color: #4a5a6a;
-  margin-top: 3px;
-}
-
-input, textarea, select {
+input, textarea {
   width: 100%;
   padding: 8px 12px;
   background: #080c11;
@@ -134,7 +116,7 @@ input, textarea, select {
   transition: 0.2s;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus, textarea:focus {
   border-color: #3a7aaa;
   outline: none;
   box-shadow: 0 0 16px rgba(60, 180, 255, 0.05);
@@ -145,7 +127,6 @@ textarea {
   min-height: 44px;
 }
 
-/* ===== 行レイアウト ===== */
 .row {
   display: flex;
   gap: 14px;
@@ -154,10 +135,9 @@ textarea {
 
 .row .field {
   flex: 1;
-  min-width: 120px;
+  min-width: 100px;
 }
 
-/* ===== チェックボックス ===== */
 .checkbox-group {
   display: flex;
   gap: 16px;
@@ -183,9 +163,8 @@ textarea {
   flex-shrink: 0;
 }
 
-/* ===== アコーディオン ===== */
 .accordion {
-  margin: 8px 0 4px;
+  margin: 6px 0 4px;
   border: 1px solid #1a2a3a;
   border-radius: 8px;
   overflow: hidden;
@@ -195,7 +174,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 8px 14px;
   background: rgba(0, 120, 255, 0.04);
   cursor: pointer;
   font-weight: 600;
@@ -221,7 +200,7 @@ textarea {
 
 .accordion-body {
   display: none;
-  padding: 14px;
+  padding: 12px 14px;
   background: rgba(0, 0, 0, 0.2);
   border-top: 1px solid #1a2a3a;
 }
@@ -230,7 +209,6 @@ textarea {
   display: block;
 }
 
-/* ===== ボタン ===== */
 .actions {
   display: flex;
   gap: 10px;
@@ -289,20 +267,18 @@ button:active {
   color: #8ad0ff;
 }
 
-/* ===== 投票アイテム ===== */
 .poll-item {
   background: rgba(0, 120, 255, 0.03);
   border: 1px solid #1a2a3a;
   border-radius: 8px;
   padding: 12px;
-  margin-bottom: 12px;
+  margin: 10px 0;
 }
 
 .poll-item .field {
   margin-bottom: 8px;
 }
 
-/* ===== トークンチェッカー結果 ===== */
 .token-result {
   margin-top: 12px;
   padding: 10px 12px;
@@ -311,7 +287,7 @@ button:active {
   border-radius: 8px;
   font-family: 'Courier New', monospace;
   font-size: 12px;
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
   display: none;
 }
@@ -321,7 +297,7 @@ button:active {
 }
 
 .token-result .token-entry {
-  padding: 5px 4px;
+  padding: 4px 0;
   border-bottom: 1px solid #0a1218;
   display: flex;
   justify-content: space-between;
@@ -381,7 +357,6 @@ button:active {
   to { opacity: 1; }
 }
 
-/* ===== チェッカー統計 ===== */
 .checker-stats {
   display: flex;
   gap: 16px;
@@ -399,11 +374,10 @@ button:active {
   gap: 4px;
 }
 
-.checker-stats #validCount { color: #5ac8a0; font-weight: 700; }
-.checker-stats #lockedCount { color: #ffaa32; font-weight: 700; }
-.checker-stats #invalidCount { color: #ff6a6a; font-weight: 700; }
+#validCount { color: #5ac8a0; font-weight: 700; }
+#lockedCount { color: #ffaa32; font-weight: 700; }
+#invalidCount { color: #ff6a6a; font-weight: 700; }
 
-/* ===== ステータス & ログ ===== */
 .status {
   background: rgba(0, 120, 255, 0.04);
   border: 1px solid #1a2a3a;
@@ -449,12 +423,11 @@ button:active {
 .log-success { color: #5ac8a0; }
 .log-info { color: #6cb4ee; }
 
-/* ===== レスポンシブ ===== */
 @media (max-width: 700px) {
   .container { padding: 14px; }
   .header h1 { font-size: 22px; }
   .row { flex-direction: column; gap: 0; }
-  .actions button { flex: 1; min-width: 70px; font-size: 11px; padding: 6px 12px; }
   .main-grid { grid-template-columns: 1fr; gap: 16px; }
   .card { padding: 14px; }
+  .actions button { flex: 1; font-size: 11px; padding: 6px 12px; }
 }
