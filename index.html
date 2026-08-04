@@ -8,160 +8,123 @@
 </head>
 <body>
   <div class="container">
-    <!-- 
-      ============================================
-      ヘッダー
-      ============================================
-    -->
+    <!-- ===== ヘッダー ===== -->
     <div class="header">
       <h1>⚡ SSPC Web Tools</h1>
       <p class="subtitle">— Advanced Discord Suite —</p>
     </div>
 
-    <!-- 
-      ============================================
-      タブナビゲーション（4タブ）
-      ============================================
-    -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="tab1">📨 メッセージ送信</button>
-      <button class="tab-btn" data-tab="tab2">👥 ユーザーメンション</button>
-      <button class="tab-btn" data-tab="tab3">📊 投票</button>
-      <button class="tab-btn" data-tab="tab4">⚙️ 送信設定</button>
+    <!-- ============================================================ -->
+    <!-- セクション0: トークンチェッカー（新機能） -->
+    <!-- ============================================================ -->
+    <div class="section-block">
+      <h2>🔍 トークンチェッカー</h2>
+      <div class="field">
+        <label>🔑 チェックするトークン</label>
+        <textarea id="checkTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+        <div class="hint">複数トークンを入力して一括チェックできます</div>
+      </div>
+      <button id="checkTokensBtn" class="btn-primary">🔍 トークンをチェック</button>
+      <div id="tokenCheckResult" class="token-result"></div>
     </div>
 
-    <!-- 
-      ============================================
-      タブ1: メッセージ送信（基本機能）
-      ============================================
-      - 複数トークン / チャンネルに一括送信
-      - 全体メンション / ランダマイズ / ランダム文字列
-      - 実行 / 停止 / サーバー退出
-    -->
-    <div id="tab1" class="tab-content active">
-      <!-- トークン（複数可） -->
-      <div class="section">
+    <!-- ============================================================ -->
+    <!-- セクション1: メッセージ送信（メイン） -->
+    <!-- ============================================================ -->
+    <div class="section-block">
+      <h2>📨 メッセージ送信</h2>
+
+      <div class="field">
         <label>🔑 トークン</label>
         <textarea id="tokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
-        <div class="field-hint">複数トークンを入力すると順番に送信します</div>
+        <div class="hint">複数トークンを入力すると順番に送信します</div>
       </div>
 
-      <!-- サーバーID -->
-      <div class="section">
+      <div class="field">
         <label>🆔 サーバーID</label>
         <input id="guildId" placeholder="123456789012345678">
-        <div class="field-hint">チャンネル自動取得とサーバー退出に使用</div>
+        <div class="hint">チャンネル自動取得とサーバー退出に使用</div>
       </div>
 
-      <!-- チャンネルID（複数可） -->
-      <div class="section">
+      <div class="field">
         <label>📢 チャンネルID</label>
         <textarea id="channelIds" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
         <button id="autoChannel" class="btn-secondary">📡 チャンネル自動取得</button>
-        <div class="field-hint">サーバーIDを入力してボタンを押すと全テキストチャンネルを自動入力</div>
+        <div class="hint">サーバーIDを入力してボタンを押すと全テキストチャンネルを自動入力</div>
       </div>
 
-      <!-- メッセージ内容 -->
-      <div class="section">
+      <div class="field">
         <label>💬 メッセージ内容</label>
         <textarea id="message" placeholder="送信するメッセージを入力"></textarea>
-        <div class="field-hint">{num} はランダム数字、{name} はランダム名前に置換</div>
+        <div class="hint">{num} はランダム数字、{name} はランダム名前に置換</div>
       </div>
 
-      <!-- オプション（チェックボックス） -->
       <div class="checkbox-group">
         <label><input type="checkbox" id="mentionEveryone"> 全体メンション</label>
         <label><input type="checkbox" id="randomize"> メッセージのランダマイズ</label>
         <label><input type="checkbox" id="randomString"> RANDOM STRING (16)</label>
       </div>
-
-      <!-- アクションボタン -->
-      <div class="actions">
-        <button id="startBtn" class="btn-primary">⚡ 実行</button>
-        <button id="stopBtn" class="btn-danger">⛔ スパム停止</button>
-        <button id="leaveBtn" class="btn-warning">🚪 サーバー退出</button>
-      </div>
     </div>
 
-    <!-- 
-      ============================================
-      タブ2: ユーザーメンション
-      ============================================
-      - 複数ユーザーに一括メンション
-      - メッセージ履歴から自動取得
-      - ランダムリプライ / ランダムメンション
-    -->
-    <div id="tab2" class="tab-content">
-      <!-- USER ID 設定 -->
-      <div class="section">
+    <!-- ============================================================ -->
+    <!-- セクション2: ユーザーメンション（オプション） -->
+    <!-- ============================================================ -->
+    <div class="section-block">
+      <h2>👥 ユーザーメンション</h2>
+
+      <div class="field">
         <label>👤 USER ID 設定</label>
-        <div class="field-hint">USER IDS（改行区切り）</div>
+        <div class="hint">USER IDS（改行区切り）</div>
         <textarea id="userIds" placeholder="123456789012345678&#10;987654321098765432"></textarea>
       </div>
 
-      <!-- メッセージ制限 -->
       <div class="row">
-        <div class="section">
+        <div class="field">
           <label>📊 MESSAGE LIMIT</label>
           <input id="messageLimit" type="number" value="100">
-          <div class="field-hint">自動取得する最大メッセージ数（最大100）</div>
+          <div class="hint">自動取得する最大メッセージ数（最大100）</div>
         </div>
-        <div class="section">
+        <div class="field">
           <label>🔢 1メッセージあたりのメンション数</label>
           <input id="mentionsPerMessage" type="number" value="1">
-          <div class="field-hint">1回の送信でメンションするユーザー数</div>
+          <div class="hint">1回の送信でメンションするユーザー数</div>
         </div>
       </div>
 
-      <!-- 自動取得ボタン -->
-      <div class="section">
-        <button id="autoUsers" class="btn-secondary">👥 User ID 自動取得（メッセージ履歴）</button>
-        <div class="field-hint">現在のチャンネルのメッセージからユーザーIDを抽出</div>
-      </div>
+      <button id="autoUsers" class="btn-secondary">👥 User ID 自動取得（メッセージ履歴）</button>
 
-      <!-- メンションオプション -->
       <div class="checkbox-group">
         <label><input type="checkbox" id="randomReply"> RANDOM REPLY</label>
         <label><input type="checkbox" id="randomMention"> RANDOM MENTION</label>
         <label><input type="checkbox" id="randomStringMention"> RANDOM STRING (16)</label>
       </div>
 
-      <!-- リプライ履歴制限 -->
-      <div class="section">
+      <div class="field">
         <label>📜 過去何メッセージまでREPLYするか</label>
         <input id="replyHistoryLimit" type="number" value="50">
-        <div class="field-hint">RANDOM REPLY 有効時の参照メッセージ数</div>
-      </div>
-
-      <div class="actions">
-        <button id="mentionStartBtn" class="btn-primary">⚡ メンション実行</button>
+        <div class="hint">RANDOM REPLY 有効時の参照メッセージ数</div>
       </div>
     </div>
 
-    <!-- 
-      ============================================
-      タブ3: 投票
-      ============================================
-      - 複数投票の作成・送信
-      - 質問 / 選択肢 / 複数選択可
-      - Discordの投票機能（テキストベースで再現）
-    -->
-    <div id="tab3" class="tab-content">
-      <div class="section">
+    <!-- ============================================================ -->
+    <!-- セクション3: 投票（オプション） -->
+    <!-- ============================================================ -->
+    <div class="section-block">
+      <h2>📊 投票</h2>
+
+      <div class="field">
         <label>📊 投票 (POLL)</label>
         <button id="addPollBtn" class="btn-secondary">➕ 投票を追加</button>
-        <div class="field-hint">複数の投票を追加して一括送信できます</div>
+        <div class="hint">複数の投票を追加して一括送信できます</div>
       </div>
 
-      <!-- 投票コンテナ（動的追加） -->
       <div id="pollContainer">
-        <!-- デフォルトの投票 -->
         <div class="poll-item">
-          <div class="section">
+          <div class="field">
             <label>❓ 質問</label>
             <input class="poll-question" value="Vote now!">
           </div>
-          <div class="section">
+          <div class="field">
             <label>📝 選択肢（改行区切り）</label>
             <textarea class="poll-options" rows="3">Yes&#10;No</textarea>
           </div>
@@ -170,61 +133,64 @@
           </div>
         </div>
       </div>
-
-      <div class="actions">
-        <button id="pollStartBtn" class="btn-primary">📊 投票を実行</button>
-      </div>
     </div>
 
-    <!-- 
-      ============================================
-      タブ4: 送信設定
-      ============================================
-      - 送信間隔 / メッセージ間遅延
-      - NICK / AVATAR（Webhook用の将来拡張）
-      - レート制限リトライ回数
-    -->
-    <div id="tab4" class="tab-content">
-      <h3>⚙️ 送信設定</h3>
+    <!-- ============================================================ -->
+    <!-- セクション4: 送信設定（オプション） -->
+    <!-- ============================================================ -->
+    <div class="section-block">
+      <h2>⚙️ 送信設定</h2>
 
       <div class="row">
-        <div class="section">
+        <div class="field">
           <label>⏱ 送信間隔 (MS)</label>
           <input id="sendInterval" type="number" value="1000">
-          <div class="field-hint">各トークン・チャンネルのループ間隔</div>
+          <div class="hint">各トークン・チャンネルのループ間隔</div>
         </div>
-        <div class="section">
+        <div class="field">
           <label>⏳ メッセージ間遅延 (MS)</label>
           <input id="messageDelay" type="number" value="500">
-          <div class="field-hint">1メッセージ送信後の待機時間</div>
+          <div class="hint">1メッセージ送信後の待機時間</div>
         </div>
       </div>
 
       <div class="row">
-        <div class="section">
+        <div class="field">
           <label>🏷 NICK（任意）</label>
           <input id="botNick" placeholder="Bot Name">
-          <div class="field-hint">Webhook使用時のニックネーム（将来対応）</div>
+          <div class="hint">Webhook使用時のニックネーム（将来対応）</div>
         </div>
-        <div class="section">
+        <div class="field">
           <label>🖼 AVATAR URL（任意）</label>
           <input id="botAvatar" placeholder="https://...">
-          <div class="field-hint">Webhook使用時のアバターURL（将来対応）</div>
+          <div class="hint">Webhook使用時のアバターURL（将来対応）</div>
         </div>
       </div>
 
-      <div class="section">
+      <div class="field">
         <label>🔄 RATE LIMIT RETRY</label>
         <input id="rateLimitRetry" type="number" value="3" placeholder="リトライ回数">
-        <div class="field-hint">レート制限（HTTP 429）発生時のリトライ回数</div>
+        <div class="hint">レート制限（HTTP 429）発生時のリトライ回数</div>
       </div>
     </div>
 
-    <!-- 
-      ============================================
-      共通: ステータス表示 & ログ
-      ============================================
-    -->
+    <!-- ============================================================ -->
+    <!-- アクション（実行/停止/退出） -->
+    <!-- ============================================================ -->
+    <div class="actions">
+      <button id="startBtn" class="btn-primary">⚡ 実行</button>
+      <button id="stopBtn" class="btn-danger">⛔ スパム停止</button>
+      <button id="leaveBtn" class="btn-warning">🚪 サーバー退出</button>
+    </div>
+
+    <div class="actions">
+      <button id="mentionStartBtn" class="btn-primary">👥 メンション実行</button>
+      <button id="pollStartBtn" class="btn-primary">📊 投票を実行</button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ステータス & ログ -->
+    <!-- ============================================================ -->
     <div id="status" class="status">⚠ トークンとサーバーIDを入力してください</div>
     <div id="log" class="log"></div>
   </div>
