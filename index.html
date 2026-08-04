@@ -8,50 +8,97 @@
 </head>
 <body>
   <div class="container">
+    <!-- ===== ヘッダー ===== -->
     <div class="header">
       <h1>⚡ SSPC Web Tools</h1>
       <p class="subtitle">— Advanced Discord Suite —</p>
     </div>
 
-    <div class="main-grid">
-      <!-- ===== 左: メッセージ送信 ===== -->
-      <div class="card main-card">
-        <h2>📨 メッセージ送信</h2>
+    <!-- ===== タブナビゲーション ===== -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tabChecker">🔍 Token Checker</button>
+      <button class="tab-btn" data-tab="tabRaid">⚔️ Raid Tool</button>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- タブ1: Token Checker -->
+    <!-- ========================================================== -->
+    <div id="tabChecker" class="tab-content active">
+      <div class="card">
+        <h2>🔍 Token Checker</h2>
+        <p class="tab-desc">トークンの有効性をチェックします</p>
 
         <div class="field">
-          <label>トークン</label>
-          <textarea id="tokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+          <label>チェックするトークン</label>
+          <textarea id="checkTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
         </div>
 
+        <button id="checkTokensBtn" class="btn-primary">🔍 チェック</button>
+
+        <div id="tokenCheckResult" class="token-result"></div>
+
+        <div class="checker-stats">
+          <span>✅ 有効: <span id="validCount">0</span></span>
+          <span>📱 電話制限: <span id="lockedCount">0</span></span>
+          <span>❌ 無効: <span id="invalidCount">0</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- タブ2: Raid Tool -->
+    <!-- ========================================================== -->
+    <div id="tabRaid" class="tab-content">
+      <div class="card">
+        <h2>⚔️ Raid Tool</h2>
+        <p class="tab-desc">複数トークンでチャンネルへメッセージを送信、メンション、投票などをまとめて行えます。</p>
+
+        <!-- ===== トークン ===== -->
+        <div class="field">
+          <label>トークン</label>
+          <textarea id="raidTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+        </div>
+
+        <!-- ===== サーバーID ===== -->
         <div class="field">
           <label>サーバーID</label>
           <input id="guildId" placeholder="123456789012345678">
         </div>
 
+        <!-- ===== チャンネルID ===== -->
         <div class="field">
           <label>チャンネルID</label>
           <textarea id="channelIds" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
           <button id="autoChannel" class="btn-secondary">📡 チャンネル自動取得</button>
         </div>
 
+        <!-- ===== メッセージ内容 ===== -->
         <div class="field">
           <label>メッセージ内容</label>
           <textarea id="message" placeholder="送信するメッセージを入力"></textarea>
         </div>
 
+        <!-- ===== 基本オプション ===== -->
         <div class="checkbox-group">
           <label><input type="checkbox" id="mentionEveryone"> 全体メンション</label>
           <label><input type="checkbox" id="randomize"> ランダマイズ</label>
-          <label><input type="checkbox" id="randomString"> RANDOM STRING (16)</label>
         </div>
 
-        <!-- 送信設定 (アコーディオン) -->
+        <!-- ========================================================== -->
+        <!-- アコーディオン1: 送信設定 -->
+        <!-- ========================================================== -->
         <div class="accordion">
           <div class="accordion-header" data-target="accordionSettings">
-            <span>⚙️ 送信設定</span>
-            <span class="accordion-arrow">▶</span>
+            <span>▶ 送信設定</span>
           </div>
           <div class="accordion-body" id="accordionSettings">
+            <div class="toggle-row">
+              <label class="toggle-switch">
+                <input type="checkbox" id="settingsEnabled">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">送信設定を有効にする</span>
+            </div>
             <div class="row">
               <div class="field">
                 <label>送信間隔 (MS)</label>
@@ -66,16 +113,28 @@
               <label>RATE LIMIT RETRY</label>
               <input id="rateLimitRetry" type="number" value="3">
             </div>
+            <div class="field">
+              <label>送信上限 (0=無制限)</label>
+              <input id="limit" type="number" value="0">
+            </div>
           </div>
         </div>
 
-        <!-- ユーザーメンション (アコーディオン) -->
+        <!-- ========================================================== -->
+        <!-- アコーディオン2: ユーザーメンション -->
+        <!-- ========================================================== -->
         <div class="accordion">
           <div class="accordion-header" data-target="accordionMention">
-            <span>👥 ユーザーメンション</span>
-            <span class="accordion-arrow">▶</span>
+            <span>▶ ユーザーメンション</span>
           </div>
           <div class="accordion-body" id="accordionMention">
+            <div class="toggle-row">
+              <label class="toggle-switch">
+                <input type="checkbox" id="mentionEnabled">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">ユーザーメンションを有効にする</span>
+            </div>
             <div class="field">
               <label>USER ID</label>
               <textarea id="userIds" placeholder="改行区切り"></textarea>
@@ -92,25 +151,56 @@
             </div>
             <button id="autoUsers" class="btn-secondary">👥 User ID 自動取得</button>
             <div class="checkbox-group">
-              <label><input type="checkbox" id="randomReply"> RANDOM REPLY</label>
               <label><input type="checkbox" id="randomMention"> RANDOM MENTION</label>
-              <label><input type="checkbox" id="randomStringMention"> RANDOM STRING (16)</label>
-            </div>
-            <div class="field">
-              <label>過去何メッセージまでREPLYするか</label>
-              <input id="replyHistoryLimit" type="number" value="50">
             </div>
             <button id="mentionStartBtn" class="btn-primary">👥 メンション実行</button>
           </div>
         </div>
 
-        <!-- 投票 (アコーディオン) -->
+        <!-- ========================================================== -->
+        <!-- アコーディオン3: リプライ設定 -->
+        <!-- ========================================================== -->
+        <div class="accordion">
+          <div class="accordion-header" data-target="accordionReply">
+            <span>▶ リプライ設定</span>
+          </div>
+          <div class="accordion-body" id="accordionReply">
+            <div class="toggle-row">
+              <label class="toggle-switch">
+                <input type="checkbox" id="replyEnabled">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">リプライ設定を有効にする</span>
+            </div>
+            <div class="field">
+              <label>過去何メッセージまで参照するか</label>
+              <input id="replyHistoryLimit" type="number" value="50">
+            </div>
+            <div class="checkbox-group">
+              <label><input type="checkbox" id="randomReply"> RANDOM REPLY</label>
+            </div>
+            <div class="field">
+              <label>カスタムリプライ文言（任意）</label>
+              <input id="replyCustomText" placeholder="デフォルト: メッセージ内容をそのまま引用">
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- アコーディオン4: 投票 -->
+        <!-- ========================================================== -->
         <div class="accordion">
           <div class="accordion-header" data-target="accordionPoll">
-            <span>📊 投票</span>
-            <span class="accordion-arrow">▶</span>
+            <span>▶ 投票</span>
           </div>
           <div class="accordion-body" id="accordionPoll">
+            <div class="toggle-row">
+              <label class="toggle-switch">
+                <input type="checkbox" id="pollEnabled">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">投票を有効にする</span>
+            </div>
             <button id="addPollBtn" class="btn-secondary">➕ 投票を追加</button>
             <div id="pollContainer">
               <div class="poll-item">
@@ -131,35 +221,17 @@
           </div>
         </div>
 
+        <!-- ===== アクションボタン ===== -->
         <div class="actions">
           <button id="startBtn" class="btn-primary">⚡ 実行</button>
           <button id="stopBtn" class="btn-danger">⛔ スパム停止</button>
           <button id="leaveBtn" class="btn-warning">🚪 サーバー退出</button>
         </div>
       </div>
-
-      <!-- ===== 右: トークンチェッカー ===== -->
-      <div class="card checker-card">
-        <h2>🔍 トークンチェッカー</h2>
-
-        <div class="field">
-          <label>チェックするトークン</label>
-          <textarea id="checkTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
-        </div>
-
-        <button id="checkTokensBtn" class="btn-primary">🔍 チェック</button>
-
-        <div id="tokenCheckResult" class="token-result"></div>
-
-        <div class="checker-stats">
-          <span>✅ 有効: <span id="validCount">0</span></span>
-          <span>📱 電話制限: <span id="lockedCount">0</span></span>
-          <span>❌ 無効: <span id="invalidCount">0</span></span>
-        </div>
-      </div>
     </div>
 
-    <div id="status" class="status">⚠ トークンとサーバーIDを入力してください</div>
+    <!-- ===== ステータス & ログ ===== -->
+    <div id="status" class="status">⚠ トークンを入力してください</div>
     <div id="log" class="log"></div>
   </div>
 
