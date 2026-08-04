@@ -1,341 +1,80 @@
-/* ============================================================
-   SSPC Web Tools - スタイルシート
-   ダークテーマ / クリーン / タブ対応
-   ============================================================ */
+/* ===== 既存のスタイルに追加 ===== */
 
-/* ----- リセット & ベース ----- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: #0a0e14;                       /* ダークベース */
-  background-image: 
-    radial-gradient(ellipse at 20% 50%, rgba(0, 100, 200, 0.05) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 50%, rgba(0, 200, 255, 0.03) 0%, transparent 60%);
-  color: #c8d0dc;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
-}
-
-/* ----- メインコンテナ ----- */
-.container {
-  max-width: 900px;
-  width: 100%;
-  background: linear-gradient(160deg, #11181f, #080c11);
-  border: 1px solid #1a2a3a;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 0 60px rgba(0, 100, 200, 0.06), inset 0 0 80px rgba(0,0,0,0.4);
-}
-
-/* ----- ヘッダー ----- */
-.header {
-  text-align: center;
-  border-bottom: 1px solid #1a2a3a;
-  padding-bottom: 16px;
-  margin-bottom: 20px;
-}
-
-.header h1 {
-  font-size: 32px;
-  font-weight: 800;
-  color: #6cb4ee;                          /* メインブルー */
-  text-shadow: 0 0 30px rgba(60, 180, 255, 0.1);
-  letter-spacing: 3px;
-}
-
-.header .subtitle {
-  color: #5a7a8a;
-  font-size: 13px;
-  letter-spacing: 5px;
-  font-weight: 300;
-  margin-top: 4px;
-}
-
-/* ----- タブナビゲーション ----- */
-.tabs {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #1a2a3a;
-  padding-bottom: 12px;
-}
-
-.tab-btn {
-  background: transparent;
-  border: 1px solid #1a2a3a;
-  border-radius: 8px;
-  padding: 8px 18px;
-  color: #5a7a8a;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-  letter-spacing: 0.5px;
-}
-
-.tab-btn:hover {
-  border-color: #3a7aaa;
-  color: #8ad0ff;
-  background: rgba(0, 120, 255, 0.05);
-}
-
-.tab-btn.active {
-  background: #1a2a3a;
-  border-color: #3a7aaa;
-  color: #8ad0ff;
-  box-shadow: 0 0 20px rgba(60, 180, 255, 0.05);
-}
-
-/* ----- タブコンテンツ（表示切替） ----- */
-.tab-content {
-  display: none;
-  animation: fadeIn 0.3s ease;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.tab-content h3 {
-  color: #6cb4ee;
-  margin-bottom: 16px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
-/* ----- フォーム要素 ----- */
-.section {
-  margin-bottom: 16px;
-}
-
-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #7a8a9a;
-  margin-bottom: 4px;
-  letter-spacing: 0.5px;
-}
-
-.field-hint {
-  font-size: 12px;
-  color: #4a5a6a;
-  margin-top: 4px;
-}
-
-input, textarea, select {
-  width: 100%;
-  padding: 10px 14px;
-  background: #080c11;
-  border: 1px solid #1a2a3a;
-  border-radius: 8px;
-  color: #c8d0dc;
-  font-size: 14px;
-  font-family: 'Courier New', monospace;
-  transition: 0.2s;
-}
-
-input:focus, textarea:focus, select:focus {
-  border-color: #3a7aaa;
-  outline: none;
-  box-shadow: 0 0 20px rgba(60, 180, 255, 0.05);
-}
-
-textarea {
-  resize: vertical;
-  min-height: 50px;
-}
-
-select {
-  appearance: none;
-  cursor: pointer;
-  width: auto;
-  min-width: 150px;
-}
-
-/* ----- 行レイアウト（2カラム） ----- */
-.row {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.row .section {
-  flex: 1;
-  min-width: 150px;
-}
-
-.row input[type="number"] {
-  width: 100%;
-}
-
-/* ----- チェックボックスグループ ----- */
-.checkbox-group {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-.checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #7a8a9a;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.checkbox-group input[type="checkbox"] {
-  width: 17px;
-  height: 17px;
-  accent-color: #3a7aaa;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-/* ----- ボタン ----- */
-.actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin: 16px 0 8px;
-}
-
-button {
-  padding: 10px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  transition: 0.2s;
-  letter-spacing: 0.5px;
-}
-
-button:hover {
-  transform: scale(1.02);
-  filter: brightness(1.1);
-}
-
-button:active {
-  transform: scale(0.97);
-}
-
-/* ボタンカラー */
-.btn-primary {
-  background: linear-gradient(145deg, #1a4a6a, #0d2a42);
-  color: #8ad0ff;
-  border: 1px solid #2a5a7a;
-}
-
-.btn-danger {
-  background: linear-gradient(145deg, #4a1a1a, #2a0a0a);
-  color: #ff6a6a;
-  border: 1px solid #5a2a2a;
-}
-
-.btn-warning {
-  background: linear-gradient(145deg, #3a3a1a, #1a1a0a);
-  color: #d4c9a8;
-  border: 1px solid #4a4a2a;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: #6cb4ee;
-  border: 1px solid #1a3a5a;
-  padding: 6px 16px;
-  font-size: 12px;
-}
-
-.btn-secondary:hover {
-  background: #1a2a3a;
-  color: #8ad0ff;
-}
-
-/* ----- 投票アイテム（動的追加用） ----- */
-.poll-item {
-  background: rgba(0, 120, 255, 0.03);
-  border: 1px solid #1a2a3a;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.poll-item .section {
-  margin-bottom: 12px;
-}
-
-/* ----- ステータス表示 ----- */
-.status {
-  background: rgba(0, 120, 255, 0.04);
-  border: 1px solid #1a2a3a;
-  border-radius: 8px;
+/* トークンチェッカー結果表示 */
+.token-result {
+  margin-top: 12px;
   padding: 12px 16px;
-  color: #7a8a9a;
-  font-size: 14px;
-  margin: 16px 0 12px;
-  text-align: center;
-  font-weight: 500;
-}
-
-/* ----- ログ表示 ----- */
-.log {
   background: #060a0e;
   border: 1px solid #1a2a3a;
   border-radius: 8px;
-  padding: 14px;
-  max-height: 250px;
-  overflow-y: auto;
   font-family: 'Courier New', monospace;
   font-size: 13px;
-  color: #6a8a9a;
-  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
 }
 
-.log::-webkit-scrollbar {
-  width: 6px;
-}
-.log::-webkit-scrollbar-track {
-  background: #060a0e;
-}
-.log::-webkit-scrollbar-thumb {
-  background: #1a2a3a;
-  border-radius: 3px;
+.token-result.show {
+  display: block;
 }
 
-.log-entry {
-  padding: 2px 0;
+.token-result .token-entry {
+  padding: 6px 8px;
   border-bottom: 1px solid #0a1218;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
-/* ログの色分け */
-.log-error { color: #ff6a6a; }      /* エラー: 赤 */
-.log-success { color: #5ac8a0; }     /* 成功: 緑 */
-.log-info { color: #6cb4ee; }        /* 情報: 青 */
+.token-result .token-entry:last-child {
+  border-bottom: none;
+}
 
-/* ----- レスポンシブ対応（スマホ） ----- */
-@media (max-width: 700px) {
-  .container { padding: 16px; }
-  .header h1 { font-size: 22px; }
-  .tabs { gap: 4px; }
-  .tab-btn { font-size: 11px; padding: 6px 12px; }
-  .row { flex-direction: column; gap: 0; }
-  .actions button { flex: 1; min-width: 80px; font-size: 12px; padding: 8px 12px; }
+.token-result .token-preview {
+  color: #6a8a9a;
+  font-size: 12px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.token-result .status-badge {
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge.valid {
+  background: rgba(90, 200, 160, 0.15);
+  color: #5ac8a0;
+  border: 1px solid #5ac8a0;
+}
+
+.status-badge.locked {
+  background: rgba(255, 170, 50, 0.15);
+  color: #ffaa32;
+  border: 1px solid #ffaa32;
+}
+
+.status-badge.invalid {
+  background: rgba(255, 106, 106, 0.15);
+  color: #ff6a6a;
+  border: 1px solid #ff6a6a;
+}
+
+.status-badge.checking {
+  background: rgba(108, 180, 238, 0.15);
+  color: #6cb4ee;
+  border: 1px solid #6cb4ee;
+  animation: pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
 }
