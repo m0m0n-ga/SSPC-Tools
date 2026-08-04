@@ -1,17 +1,14 @@
 // ============================================================
-// SSPC Web Tools - メインロジック
+// SSPC Web Tools - 全機能（トークンチェッカー追加・完全版）
 // 注意: Discord利用規約に違反します。自己責任で使用してください。
 // ============================================================
 
-// ----- 定数 -----
 const API_BASE = 'https://discord.com/api/v9';
 
-// ----- グローバル状態 -----
-let running = false;      // 実行中フラグ
-let stopFlag = false;     // 停止リクエストフラグ
-let pollCount = 0;        // 投票カウンター（ID生成用）
+let running = false;
+let stopFlag = false;
+let pollCount = 0;
 
-// ----- DOM参照（キャッシュ） -----
 const statusDiv = document.getElementById('status');
 const logDiv = document.getElementById('log');
 
@@ -19,63 +16,32 @@ const logDiv = document.getElementById('log');
 // ユーティリティ関数
 // ============================================================
 
-/**
- * ステータス表示を更新
- * @param {string} msg - 表示メッセージ
- * @param {boolean} isError - エラー時はtrue
- */
 function setStatus(msg, isError = false) {
   statusDiv.textContent = msg;
   statusDiv.style.borderColor = isError ? '#4a1a1a' : '#1a2a3a';
   statusDiv.style.color = isError ? '#ff6a6a' : '#7a8a9a';
 }
 
-/**
- * ログにメッセージを追加
- * @param {string} msg - メッセージ
- * @param {string} type - 'info' / 'success' / 'error'
- */
 function log(msg, type = 'info') {
   const entry = document.createElement('div');
   entry.className = `log-entry log-${type}`;
   entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
   logDiv.appendChild(entry);
-  logDiv.scrollTop = logDiv.scrollHeight;   // 自動スクロール
+  logDiv.scrollTop = logDiv.scrollHeight;
 }
 
-/**
- * テキストを配列にパース（カンマ/改行/スペース区切り）
- * @param {string} text - 入力テキスト
- * @returns {string[]} トリム済み配列（空文字除外）
- */
 function parseList(text) {
   return text.split(/[, \n]+/).map(s => s.trim()).filter(Boolean);
 }
 
-/**
- * トークン入力を取得
- * @returns {string[]} トークン配列
- */
 function getTokens() {
   return parseList(document.getElementById('tokens').value);
 }
 
-/**
- * チャンネルID入力を取得
- * @returns {string[]} チャンネルID配列
- */
 function getChannelIds() {
   return parseList(document.getElementById('channelIds').value);
 }
 
-/**
- * Discord APIを呼び出す（共通関数）
- * @param {string} token - 認証トークン
- * @param {string} endpoint - APIエンドポイント（例: /users/@me）
- * @param {string} method - HTTPメソッド
- * @param {object|null} body - リクエストボディ
- * @returns {Promise<object>} レスポンスJSON
- */
 async function apiCall(token, endpoint, method = 'GET', body = null) {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method,
@@ -89,11 +55,6 @@ async function apiCall(token, endpoint, method = 'GET', body = null) {
   return res.json();
 }
 
-/**
- * ランダム文字列を生成（16桁）
- * @param {number} length - 文字列長（デフォルト16）
- * @returns {string} ランダム文字列
- */
 function generateRandomString(length = 16) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -103,11 +64,6 @@ function generateRandomString(length = 16) {
   return result;
 }
 
-/**
- * メッセージをランダマイズ（{num} / {name} を置換）
- * @param {string} text - 元メッセージ
- * @returns {string} ランダマイズ後メッセージ
- */
 function randomizeText(text) {
   const num = Math.floor(Math.random() * 9999);
   const names = ['Zero', 'Alpha', 'Omega', 'Strike', 'Viper', 'Ghost', 'Shadow', 'Blade'];
@@ -115,40 +71,69 @@ function randomizeText(text) {
   return text.replace(/{num}/g, num).replace(/{name}/g, name);
 }
 
-/**
- * メッセージを1回送信
- * @param {string} token - 認証トークン
- * @param {string} channelId - 送信先チャンネルID
- * @param {string} content - メッセージ内容
- * @returns {Promise<object>} APIレスポンス
- */
 async function sendMessage(token, channelId, content) {
   return apiCall(token, `/channels/${channelId}/messages`, 'POST', { content });
 }
 
 // ============================================================
-// タブ切り替え
+// 🔍 トークンチェッカー
 // ============================================================
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    // 全タブのactiveを外す
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    // クリックされたタブをactiveに
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  });
+document.getElementById('checkTokensBtn').addEventListener('click', async () => {
+  const tokens = parseList(document.getElementById('checkTokens').value);
+  const resultDiv = document.getElementById('tokenCheckResult');
+  
+  if (!tokens.length) {
+    resultDiv.innerHTML = '<div class="token-entry" style="color:#ff6a6a;">⚠ チェックするトークンを入力してください</div>';
+    resultDiv.classList.add('show');
+    return;
+  }
+
+  resultDiv.innerHTML = '';
+  resultDiv.classList.add('show');
+
+  for (const token of tokens) {
+    const entry = document.createElement('div');
+    entry.className = 'token-entry';
+    
+    const preview = document.createElement('span');
+    preview.className = 'token-preview';
+    preview.textContent = token.slice(0, 20) + '...' + token.slice(-6);
+    
+    const badge = document.createElement('span');
+    badge.className = 'status-badge checking';
+    badge.textContent = '🔍 チェック中...';
+    
+    entry.appendChild(preview);
+    entry.appendChild(badge);
+    resultDiv.appendChild(entry);
+
+    try {
+      const data = await apiCall(token, '/users/@me');
+      badge.className = 'status-badge valid';
+      badge.textContent = `✅ 有効 (${data.username}#${data.discriminator || '0'})`;
+    } catch (error) {
+      const status = error.message;
+      if (status.includes('401')) {
+        badge.className = 'status-badge invalid';
+        badge.textContent = '❌ 無効 (トークンが正しくありません)';
+      } else if (status.includes('403')) {
+        badge.className = 'status-badge locked';
+        badge.textContent = '📱 電話制限 (認証が必要)';
+      } else {
+        badge.className = 'status-badge invalid';
+        badge.textContent = `❌ エラー: ${status}`;
+      }
+    }
+  }
+
+  log(`✅ トークンチェック完了: ${tokens.length}個`, 'success');
 });
 
 // ============================================================
-// タブ1: メッセージ送信
+// 📡 チャンネル自動取得
 // ============================================================
 
-/**
- * チャンネル自動取得
- * サーバーIDから全テキストチャンネルを取得して入力欄にセット
- */
 document.getElementById('autoChannel').addEventListener('click', async () => {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -177,10 +162,10 @@ document.getElementById('autoChannel').addEventListener('click', async () => {
   }
 });
 
-/**
- * サーバー退出
- * 全トークンで対象サーバーから退出
- */
+// ============================================================
+// 🚪 サーバー退出
+// ============================================================
+
 document.getElementById('leaveBtn').addEventListener('click', async () => {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -210,10 +195,10 @@ document.getElementById('leaveBtn').addEventListener('click', async () => {
   setStatus(`✅ 完了: 成功${ok} / 失敗${fail}`);
 });
 
-/**
- * メッセージ一括送信（メイン機能）
- * 複数トークン × 複数チャンネル にメッセージを送信
- */
+// ============================================================
+// ⚡ メッセージ一括送信（メイン機能）
+// ============================================================
+
 document.getElementById('startBtn').addEventListener('click', async () => {
   if (running) {
     setStatus('⚠ 既に実行中です', true);
@@ -221,7 +206,6 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     return;
   }
 
-  // ---- 入力値取得 ----
   const tokens = getTokens();
   const channelIds = getChannelIds();
   const message = document.getElementById('message').value.trim();
@@ -233,7 +217,6 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   const randomString = document.getElementById('randomString').checked;
   const rateLimitRetry = parseInt(document.getElementById('rateLimitRetry').value) || 3;
 
-  // ---- バリデーション ----
   if (!tokens.length) {
     setStatus('⚠ トークンを入力してください', true);
     log('トークンが入力されていません', 'error');
@@ -250,7 +233,6 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     return;
   }
 
-  // ---- 実行準備 ----
   running = true;
   stopFlag = false;
   let count = 0;
@@ -270,12 +252,10 @@ document.getElementById('startBtn').addEventListener('click', async () => {
           if (stopFlag) break;
           if (limit > 0 && count >= limit) break;
 
-          // ---- メッセージ生成 ----
           let content = baseMessage;
           if (randomize) content = randomizeText(content);
           if (randomString) content += ' ' + generateRandomString(16);
 
-          // ---- 送信（リトライ付き） ----
           let retries = 0;
           let success = false;
           while (retries < rateLimitRetry && !success) {
@@ -317,9 +297,10 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   }
 });
 
-/**
- * スパム停止
- */
+// ============================================================
+// ⛔ スパム停止
+// ============================================================
+
 document.getElementById('stopBtn').addEventListener('click', () => {
   if (running) {
     stopFlag = true;
@@ -331,13 +312,9 @@ document.getElementById('stopBtn').addEventListener('click', () => {
 });
 
 // ============================================================
-// タブ2: ユーザーメンション
+// 👥 ユーザーID自動取得
 // ============================================================
 
-/**
- * ユーザーID自動取得
- * チャンネルのメッセージ履歴からユーザーIDを抽出
- */
 document.getElementById('autoUsers').addEventListener('click', async () => {
   const tokens = getTokens();
   const channelIds = getChannelIds();
@@ -368,9 +345,10 @@ document.getElementById('autoUsers').addEventListener('click', async () => {
   }
 });
 
-/**
- * メンション一括送信
- */
+// ============================================================
+// 👥 メンション一括送信
+// ============================================================
+
 document.getElementById('mentionStartBtn').addEventListener('click', async () => {
   if (running) {
     setStatus('⚠ 実行中です', true);
@@ -413,7 +391,6 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
       for (const channelId of channelIds) {
         if (stopFlag) break;
 
-        // RANDOM REPLY用にメッセージ履歴を取得
         let replyMessages = [];
         if (randomReply) {
           try {
@@ -469,12 +446,9 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
 });
 
 // ============================================================
-// タブ3: 投票（テキストベース）
+// 📊 投票追加（動的生成）
 // ============================================================
 
-/**
- * 投票を追加（動的生成）
- */
 document.getElementById('addPollBtn').addEventListener('click', () => {
   pollCount++;
   const container = document.getElementById('pollContainer');
@@ -482,11 +456,11 @@ document.getElementById('addPollBtn').addEventListener('click', () => {
   poll.className = 'poll-item';
   poll.dataset.pollId = pollCount;
   poll.innerHTML = `
-    <div class="section">
+    <div class="field">
       <label>❓ 質問</label>
       <input class="poll-question" value="質問 ${pollCount}">
     </div>
-    <div class="section">
+    <div class="field">
       <label>📝 選択肢（改行区切り）</label>
       <textarea class="poll-options" rows="3">選択肢1&#10;選択肢2</textarea>
     </div>
@@ -502,10 +476,10 @@ document.getElementById('addPollBtn').addEventListener('click', () => {
   });
 });
 
-/**
- * 投票を一括送信
- * Discordの投票機能はBot専用のため、テキストメッセージで再現
- */
+// ============================================================
+// 📊 投票一括送信
+// ============================================================
+
 document.getElementById('pollStartBtn').addEventListener('click', async () => {
   if (running) {
     setStatus('⚠ 実行中です', true);
@@ -548,7 +522,6 @@ document.getElementById('pollStartBtn').addEventListener('click', async () => {
         continue;
       }
 
-      // 投票メッセージを作成
       let content = `📊 **${question}**\n`;
       if (multi) content += '（複数選択可）\n';
       options.forEach((opt, idx) => {
@@ -582,7 +555,7 @@ document.getElementById('pollStartBtn').addEventListener('click', async () => {
 });
 
 // ============================================================
-// 初期化（起動時メッセージ）
+// 初期化
 // ============================================================
 
 setStatus('⚠ トークンとサーバーIDを入力してください');
