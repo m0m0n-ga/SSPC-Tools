@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSPC Web Tools</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- ヘッダー -->
+    <div class="header">
+      <h1>⚔ SSPC Web Tools</h1>
+      <p class="subtitle">— Secure Suite Protocol Client —</p>
+    </div>
+
+    <!-- 公式コミュニティ -->
+    <div class="official">
+      <div class="official-badge">📡 公式コミュニティ</div>
+      <p>公式サーバーへの参加リンクと、BOTリリース情報を確認できます。</p>
+      <div class="official-links">
+        <a href="https://discord.gg/DAuT82nKfx" target="_blank" class="discord-link">
+          ▶ https://discord.gg/DAuT82nKfx
+        </a>
+        <span class="coming-soon">公式BOT: Coming Soon...</span>
+      </div>
+    </div>
+
+    <!-- メイン設定エリア -->
+    <div class="settings">
+      <!-- トークン -->
+      <div class="section">
+        <label>🔑 トークン</label>
+        <textarea id="tokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+      </div>
+
+      <!-- サーバーID -->
+      <div class="section">
+        <label>🆔 サーバーID</label>
+        <input id="guildId" placeholder="123456789012345678">
+      </div>
+
+      <!-- チャンネルID -->
+      <div class="section">
+        <label>📢 チャンネルID</label>
+        <textarea id="channelIds" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+        <button id="autoChannel" class="btn-secondary">📡 チャンネル自動取得</button>
+      </div>
+
+      <!-- メッセージ内容 -->
+      <div class="section">
+        <label>💬 メッセージ内容</label>
+        <textarea id="message" placeholder="送信するメッセージを入力"></textarea>
+      </div>
+
+      <!-- チェックボックス -->
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="mentionEveryone"> 全体メンション</label>
+        <label><input type="checkbox" id="randomize"> メッセージのランダマイズ</label>
+      </div>
+
+      <!-- 数値設定 -->
+      <div class="row">
+        <div class="section">
+          <label>⏱ メッセージ送信間隔</label>
+          <input id="interval" type="number" value="0"> 秒
+        </div>
+        <div class="section">
+          <label>🔢 メッセージ送信上限</label>
+          <input id="limit" type="number" value="0"> 回
+        </div>
+      </div>
+
+      <!-- ダミー設定（見た目だけ） -->
+      <div class="dummy-settings">
+        <span class="dummy-tag">メンション設定</span>
+        <span class="dummy-tag">投票設定</span>
+      </div>
+
+      <!-- アクションボタン -->
+      <div class="actions">
+        <button id="startBtn" class="btn-primary">⚡ 実行</button>
+        <button id="stopBtn" class="btn-danger">⛔ スパム停止</button>
+        <button id="leaveBtn" class="btn-warning">🚪 サーバー退出</button>
+      </div>
+
+      <!-- ステータス表示 -->
+      <div id="status" class="status">
+        ⚠ トークンとサーバーIDを入力してください
+      </div>
+
+      <!-- ログ表示 -->
+      <div id="log" class="log"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
