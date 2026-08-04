@@ -29,7 +29,6 @@ body {
   box-shadow: 0 0 60px rgba(0, 100, 200, 0.06), inset 0 0 80px rgba(0,0,0,0.4);
 }
 
-/* ===== ヘッダー ===== */
 .header {
   text-align: center;
   border-bottom: 1px solid #1a2a3a;
@@ -53,7 +52,6 @@ body {
   margin-top: 4px;
 }
 
-/* ===== タブ ===== */
 .tabs {
   display: flex;
   gap: 6px;
@@ -89,7 +87,6 @@ body {
   box-shadow: 0 0 20px rgba(60, 180, 255, 0.05);
 }
 
-/* ===== タブコンテンツ ===== */
 .tab-content {
   display: none;
   animation: fadeIn 0.3s ease;
@@ -104,7 +101,6 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== カード ===== */
 .card {
   background: rgba(0, 120, 255, 0.03);
   border: 1px solid #1a2a3a;
@@ -126,7 +122,6 @@ body {
   margin-bottom: 18px;
 }
 
-/* ===== フォーム ===== */
 .field {
   margin-bottom: 14px;
 }
@@ -199,7 +194,6 @@ textarea {
   flex-shrink: 0;
 }
 
-/* ===== アコーディオン ===== */
 .accordion {
   margin: 6px 0 4px;
   border: 1px solid #1a2a3a;
@@ -237,7 +231,6 @@ textarea {
   display: block;
 }
 
-/* ===== トグルスイッチ ===== */
 .toggle-row {
   display: flex;
   align-items: center;
@@ -301,7 +294,6 @@ textarea {
   background: #8ad0ff;
 }
 
-/* ===== ボタン ===== */
 .actions {
   display: flex;
   gap: 10px;
@@ -360,7 +352,6 @@ button:active {
   color: #8ad0ff;
 }
 
-/* ===== トークンチェッカー結果 ===== */
 .token-result {
   margin-top: 12px;
   padding: 10px 12px;
@@ -460,7 +451,6 @@ button:active {
 #lockedCount { color: #ffaa32; font-weight: 700; }
 #invalidCount { color: #ff6a6a; font-weight: 700; }
 
-/* ===== 投票アイテム ===== */
 .poll-item {
   background: rgba(0, 120, 255, 0.03);
   border: 1px solid #1a2a3a;
@@ -473,7 +463,6 @@ button:active {
   margin-bottom: 8px;
 }
 
-/* ===== ステータス & ログ ===== */
 .status {
   background: rgba(0, 120, 255, 0.04);
   border: 1px solid #1a2a3a;
@@ -519,7 +508,6 @@ button:active {
 .log-success { color: #5ac8a0; }
 .log-info { color: #6cb4ee; }
 
-/* ===== レスポンシブ ===== */
 @media (max-width: 700px) {
   .container { padding: 14px; }
   .header h1 { font-size: 22px; }
