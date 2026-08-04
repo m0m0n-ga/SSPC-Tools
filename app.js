@@ -1,4 +1,4 @@
-const API_BASE = 'https://discord.com/api/v9';
+const API_BASE = 'https://discord.com/api/v10';
 
 let running = false;
 let stopFlag = false;
@@ -39,16 +39,44 @@ function getChannelIds() {
 }
 
 async function apiCall(token, endpoint, method = 'GET', body = null) {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  const headers = {
+    'Authorization': token,
+    'Content-Type': 'application/json',
+    'User-Agent': 'SSPC-WebTools (https://github.com, 1.0)',
+    'Accept': 'application/json',
+  };
+
+  const options = {
     method,
-    headers: {
-      'Authorization': token,
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : null,
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+    headers,
+  };
+
+  if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+    options.body = JSON.stringify(body);
+  }
+
+  const url = `${API_BASE}${endpoint}`;
+  log(`📡 ${method} ${endpoint}`, 'info');
+
+  try {
+    const res = await fetch(url, options);
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    const data = isJson ? await res.json() : await res.text();
+
+    if (!res.ok) {
+      const errMsg = isJson ? JSON.stringify(data) : data;
+      log(`❌ APIエラー: HTTP ${res.status} - ${errMsg}`, 'error');
+      throw new Error(`HTTP ${res.status}: ${errMsg}`);
+    }
+
+    log(`✅ ${method} ${endpoint} 成功 (${res.status})`, 'success');
+    return data;
+  } catch (e) {
+    if (!e.message.startsWith('HTTP')) {
+      log(`❌ ネットワークエラー: ${e.message}`, 'error');
+    }
+    throw e;
+  }
 }
 
 function generateRandomString() {
@@ -116,7 +144,9 @@ document.querySelectorAll('.toggle-visibility').forEach(btn => {
   });
 });
 
-// ===== Token Checker =====
+// ============================================================
+// Token Checker
+// ============================================================
 document.getElementById('checkTokensBtn').addEventListener('click', async function() {
   const tokens = parseList(document.getElementById('checkTokens').value);
   const resultDiv = document.getElementById('tokenCheckResult');
@@ -193,7 +223,11 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
   log(`チェック完了: 有効${valid} / 電話制限${locked} / 無効${invalid}`, 'info');
 });
 
-// ===== Spam Tool =====
+// ============================================================
+// Spam Tool
+// ============================================================
+
+// ----- チャンネル自動取得（強化版） -----
 document.getElementById('autoChannel').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -201,18 +235,23 @@ document.getElementById('autoChannel').addEventListener('click', async function(
   if (!guildId) return setStatus('⚠ サーバーIDがありません', true);
 
   try {
-    setStatus('📡 取得中...');
+    setStatus('📡 チャンネル取得中...');
+    log(`📡 チャンネル取得: /guilds/${guildId}/channels`, 'info');
     const data = await apiCall(tokens[0], `/guilds/${guildId}/channels`);
+    if (!Array.isArray(data)) {
+      throw new Error('APIが配列を返しませんでした: ' + JSON.stringify(data));
+    }
     const textChannels = data.filter(c => c.type === 0).map(c => c.id);
     document.getElementById('channelIds').value = textChannels.join(', ');
     setStatus(`✅ ${textChannels.length}個のチャンネルを取得`);
-    log(`${textChannels.length}個のチャンネルを取得`, 'success');
+    log(`${textChannels.length}個のテキストチャンネルを取得: ${textChannels.join(', ')}`, 'success');
   } catch (e) {
-    setStatus('❌ 取得失敗', true);
-    log('チャンネル取得エラー: ' + e.message, 'error');
+    setStatus('❌ チャンネル取得失敗', true);
+    log(`チャンネル取得エラー: ${e.message}`, 'error');
   }
 });
 
+// ----- サーバー退出（強化版） -----
 document.getElementById('leaveBtn').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -220,20 +259,57 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
   if (!guildId) return setStatus('⚠ サーバーIDがありません', true);
 
   setStatus('🚪 退出処理中...');
+  log(`🚪 サーバー退出開始: ${tokens.length}個のトークン, サーバーID: ${guildId}`, 'info');
+
   let ok = 0, fail = 0;
-  for (const token of tokens) {
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const tokenPreview = token.slice(0, 10) + '...';
+    log(`🚪 退出試行 ${i+1}/${tokens.length}: ${tokenPreview}`, 'info');
+
     try {
-      await apiCall(token, `/users/@me/guilds/${guildId}`, 'DELETE');
-      ok++;
-      log(`退出成功 (${token.slice(0,10)}...)`, 'success');
+      const res = await fetch(`https://discord.com/api/v10/users/@me/guilds/${guildId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+          'User-Agent': 'SSPC-WebTools (https://github.com, 1.0)',
+          'Accept': 'application/json',
+        }
+      });
+
+      const responseText = await res.text();
+      log(`📡 退出レスポンス: HTTP ${res.status} - ${responseText || '（空）'}`, 'info');
+
+      if (res.ok) {
+        ok++;
+        log(`✅ 退出成功 (${i+1}/${tokens.length})`, 'success');
+      } else if (res.status === 400) {
+        fail++;
+        log(`❌ 退出失敗: HTTP 400 - サーバーIDが間違っているか、このサーバーに所属していません (${tokenPreview})`, 'error');
+        log(`💡 確認: サーバーID「${guildId}」が正しいか、このトークンでそのサーバーに参加しているか確認してください`, 'error');
+      } else if (res.status === 401) {
+        fail++;
+        log(`❌ 退出失敗: HTTP 401 - トークンが無効です (${tokenPreview})`, 'error');
+      } else if (res.status === 403) {
+        fail++;
+        log(`❌ 退出失敗: HTTP 403 - 権限がありません (${tokenPreview})`, 'error');
+      } else {
+        fail++;
+        log(`❌ 退出失敗: HTTP ${res.status} - ${responseText || '原因不明'} (${tokenPreview})`, 'error');
+      }
     } catch (e) {
       fail++;
-      log(`退出失敗: ${e.message}`, 'error');
+      log(`❌ 退出失敗: ネットワークエラー - ${e.message} (${tokenPreview})`, 'error');
     }
   }
-  setStatus(`✅ 完了: 成功${ok} / 失敗${fail}`);
+
+  setStatus(`✅ 退出処理完了: 成功${ok} / 失敗${fail}`);
+  log(`🚪 退出処理完了: 成功${ok} / 失敗${fail}`, 'info');
 });
 
+// ----- メッセージ送信（強化版） -----
 document.getElementById('startBtn').addEventListener('click', async function() {
   if (running) return setStatus('⚠ 実行中です', true);
 
@@ -271,7 +347,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
   const msgBase = mentionEveryone ? '@everyone ' + baseMessage : baseMessage;
 
   setStatus(`⚡ 実行中 (${tokens.length}トークン × ${channelIds.length}チャンネル)`);
-  log(`🚀 開始: トークン${tokens.length}個, チャンネル${channelIds.length}個`, 'info');
+  log(`🚀 開始: トークン${tokens.length}個, チャンネル${channelIds.length}個, 上限${limit || '無制限'}`, 'info');
 
   try {
     while (!stopFlag) {
@@ -283,6 +359,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
           if (stopFlag) break;
           if (limit > 0 && totalSent >= limit) break;
 
+          // ===== 1. 通常メッセージ =====
           let content = msgBase;
           if (randomize) content = randomizeText(content);
 
@@ -293,16 +370,17 @@ document.getElementById('startBtn').addEventListener('click', async function() {
               await sendMessage(token, channelId, content);
               totalSent++;
               success = true;
-              log(`✅ メッセージ (${totalSent})`, 'success');
+              log(`✅ メッセージ送信成功 (${totalSent}回目)`, 'success');
               setStatus(`⚡ ${totalSent}回送信完了`);
             } catch (e) {
               retries++;
               if (e.message.includes('429')) {
-                log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
-                await new Promise(r => setTimeout(r, 5000 * retries));
+                const waitTime = 5000 * retries;
+                log(`⚠ レート制限: ${waitTime}ms待機 (リトライ${retries}/${rateLimitRetry})`, 'info');
+                await new Promise(r => setTimeout(r, waitTime));
               } else {
                 errors++;
-                log(`❌ 送信失敗: ${e.message}`, 'error');
+                log(`❌ メッセージ送信失敗: ${e.message}`, 'error');
                 break;
               }
             }
@@ -313,14 +391,16 @@ document.getElementById('startBtn').addEventListener('click', async function() {
           }
           if (stopFlag) break;
 
+          // ===== 2. ユーザーメンション =====
           if (mentionEnabled && userIds.length > 0) {
             let replyMessages = [];
             if (replyEnabled) {
               try {
                 const msgs = await apiCall(token, `/channels/${channelId}/messages?limit=${Math.min(replyHistoryLimit, 100)}`);
                 replyMessages = msgs.filter(m => m.author.id !== '自分');
+                log(`📜 リプライ用メッセージ: ${replyMessages.length}件取得`, 'info');
               } catch (e) {
-                log('リプライ用メッセージ取得失敗', 'error');
+                log(`⚠ リプライ用メッセージ取得失敗: ${e.message}`, 'error');
               }
             }
 
@@ -345,16 +425,17 @@ document.getElementById('startBtn').addEventListener('click', async function() {
                   await sendMessage(token, channelId, mentionContent);
                   totalSent++;
                   success = true;
-                  log(`✅ メンション (${totalSent})`, 'success');
+                  log(`✅ メンション送信成功 (${totalSent}回目)`, 'success');
                   setStatus(`⚡ ${totalSent}回送信完了`);
                 } catch (e) {
                   retries++;
                   if (e.message.includes('429')) {
-                    log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
-                    await new Promise(r => setTimeout(r, 5000 * retries));
+                    const waitTime = 5000 * retries;
+                    log(`⚠ レート制限: ${waitTime}ms待機 (リトライ${retries}/${rateLimitRetry})`, 'info');
+                    await new Promise(r => setTimeout(r, waitTime));
                   } else {
                     errors++;
-                    log(`❌ メンション失敗: ${e.message}`, 'error');
+                    log(`❌ メンション送信失敗: ${e.message}`, 'error');
                     break;
                   }
                 }
@@ -369,6 +450,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
 
           if (stopFlag) break;
 
+          // ===== 3. 投票 =====
           if (pollEnabled && pollItems.length > 0) {
             for (const pollEl of pollItems) {
               if (stopFlag) break;
@@ -378,7 +460,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
               const multi = pollEl.querySelector('.poll-multi')?.checked || false;
 
               if (!options.length) {
-                log(`投票「${question}」に選択肢がありません`, 'error');
+                log(`⚠ 投票「${question}」に選択肢がありません`, 'error');
                 continue;
               }
 
@@ -396,16 +478,17 @@ document.getElementById('startBtn').addEventListener('click', async function() {
                   await sendMessage(token, channelId, pollContent);
                   totalSent++;
                   success = true;
-                  log(`✅ 投票 (${totalSent})`, 'success');
+                  log(`✅ 投票送信成功 (${totalSent}回目)`, 'success');
                   setStatus(`⚡ ${totalSent}回送信完了`);
                 } catch (e) {
                   retries++;
                   if (e.message.includes('429')) {
-                    log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
-                    await new Promise(r => setTimeout(r, 5000 * retries));
+                    const waitTime = 5000 * retries;
+                    log(`⚠ レート制限: ${waitTime}ms待機 (リトライ${retries}/${rateLimitRetry})`, 'info');
+                    await new Promise(r => setTimeout(r, waitTime));
                   } else {
                     errors++;
-                    log(`❌ 投票失敗: ${e.message}`, 'error');
+                    log(`❌ 投票送信失敗: ${e.message}`, 'error');
                     break;
                   }
                 }
@@ -428,7 +511,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
     }
   } catch (e) {
     setStatus('❌ エラー', true);
-    log('予期せぬエラー: ' + e.message, 'error');
+    log(`予期せぬエラー: ${e.message}`, 'error');
   } finally {
     running = false;
     setStatus(`⏹ 停止: ${totalSent}成功 / ${errors}エラー`);
@@ -436,6 +519,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
   }
 });
 
+// ----- スパム停止 -----
 document.getElementById('stopBtn').addEventListener('click', function() {
   if (running) {
     stopFlag = true;
@@ -446,6 +530,7 @@ document.getElementById('stopBtn').addEventListener('click', function() {
   }
 });
 
+// ----- ユーザーID自動取得（強化版） -----
 document.getElementById('autoUsers').addEventListener('click', async function() {
   const tokens = getTokens();
   const channelIds = getChannelIds();
@@ -455,18 +540,23 @@ document.getElementById('autoUsers').addEventListener('click', async function() 
   if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
 
   try {
-    setStatus('👥 取得中...');
+    setStatus('👥 ユーザー取得中...');
+    log(`👥 ユーザー取得: /channels/${channelIds[0]}/messages?limit=${Math.min(limit, 100)}`, 'info');
     const data = await apiCall(tokens[0], `/channels/${channelIds[0]}/messages?limit=${Math.min(limit, 100)}`);
+    if (!Array.isArray(data)) {
+      throw new Error('APIが配列を返しませんでした');
+    }
     const userIds = [...new Set(data.map(m => m.author.id))];
     document.getElementById('userIds').value = userIds.join('\n');
     setStatus(`✅ ${userIds.length}人のユーザーを取得`);
-    log(`${userIds.length}人のユーザーIDを取得`, 'success');
+    log(`${userIds.length}人のユーザーIDを取得: ${userIds.join(', ')}`, 'success');
   } catch (e) {
-    setStatus('❌ 取得失敗', true);
-    log('ユーザー取得エラー: ' + e.message, 'error');
+    setStatus('❌ ユーザー取得失敗', true);
+    log(`ユーザー取得エラー: ${e.message}`, 'error');
   }
 });
 
+// ----- 投票追加 -----
 document.getElementById('addPollBtn').addEventListener('click', function() {
   pollCount++;
   const container = document.getElementById('pollContainer');
@@ -494,6 +584,10 @@ document.getElementById('addPollBtn').addEventListener('click', function() {
   });
 });
 
+// ============================================================
+// 初期化
+// ============================================================
+
 setStatus('⚠ トークンを入力してください');
-log('SSPC Web Tools ロード完了', 'info');
+log('SSPC Web Tools ロード完了 (API v10)', 'info');
 log('⚠ このツールはDiscordの利用規約に違反します。自己責任で使用してください', 'error');
