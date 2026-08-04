@@ -38,7 +38,7 @@ function parseList(text) {
 }
 
 function getTokens() {
-  const el = document.getElementById('raidTokens');
+  const el = document.getElementById('spamTokens');
   return el ? parseList(el.value) : [];
 }
 
@@ -174,7 +174,7 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
 });
 
 // ============================================================
-// タブ2: Raid Tool
+// タブ2: Spam Tool
 // ============================================================
 
 // ----- チャンネル自動取得 -----
@@ -219,55 +219,84 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
   setStatus(`✅ 完了: 成功${ok} / 失敗${fail}`);
 });
 
-// ----- メッセージ送信（メイン実行） -----
+// ============================================================
+// メイン実行（全部まとめてループ）
+// ============================================================
+
 document.getElementById('startBtn').addEventListener('click', async function() {
   if (running) return setStatus('⚠ 実行中です', true);
 
+  // ----- 入力値取得 -----
   const tokens = getTokens();
   const channelIds = getChannelIds();
-  const message = document.getElementById('message').value.trim();
+  const baseMessage = document.getElementById('message').value.trim();
   const mentionEveryone = document.getElementById('mentionEveryone').checked;
   const randomize = document.getElementById('randomize').checked;
 
+  // 送信設定（オフならデフォルト値）
   const settingsEnabled = document.getElementById('settingsEnabled').checked;
-  const interval = settingsEnabled ? parseInt(document.getElementById('sendInterval').value) || 1000 : 0;
-  const messageDelay = settingsEnabled ? parseInt(document.getElementById('messageDelay').value) || 500 : 0;
-  const rateLimitRetry = settingsEnabled ? parseInt(document.getElementById('rateLimitRetry').value) || 3 : 1;
+  const interval = settingsEnabled ? parseInt(document.getElementById('sendInterval').value) || 1000 : 1000;
+  const messageDelay = settingsEnabled ? parseInt(document.getElementById('messageDelay').value) || 500 : 500;
+  const rateLimitRetry = settingsEnabled ? parseInt(document.getElementById('rateLimitRetry').value) || 3 : 3;
   const limit = settingsEnabled ? parseInt(document.getElementById('limit').value) || 0 : 0;
 
+  // ユーザーメンション
+  const mentionEnabled = document.getElementById('mentionEnabled').checked;
+  const userIds = mentionEnabled ? parseList(document.getElementById('userIds').value) : [];
+  const mentionsPerMsg = mentionEnabled ? parseInt(document.getElementById('mentionsPerMessage').value) || 1 : 1;
+  const randomMention = mentionEnabled ? document.getElementById('randomMention').checked : false;
+
+  // リプライ
+  const replyEnabled = document.getElementById('replyEnabled').checked;
+  const randomReply = replyEnabled ? document.getElementById('randomReply').checked : false;
+  const replyHistoryLimit = replyEnabled ? parseInt(document.getElementById('replyHistoryLimit').value) || 50 : 50;
+  const replyCustomText = replyEnabled ? document.getElementById('replyCustomText').value.trim() : '';
+
+  // 投票
+  const pollEnabled = document.getElementById('pollEnabled').checked;
+  const pollItems = pollEnabled ? document.querySelectorAll('.poll-item') : [];
+
+  // ----- バリデーション -----
   if (!tokens.length) return setStatus('⚠ トークンがありません', true);
   if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
-  if (!message) return setStatus('⚠ メッセージがありません', true);
+  if (!baseMessage) return setStatus('⚠ メッセージがありません', true);
 
   running = true;
   stopFlag = false;
-  let count = 0, errors = 0;
+  let totalSent = 0;
+  let errors = 0;
 
-  const baseMessage = mentionEveryone ? '@everyone ' + message : message;
+  // メッセージベース
+  const msgBase = mentionEveryone ? '@everyone ' + baseMessage : baseMessage;
 
   setStatus(`⚡ 実行中 (${tokens.length}トークン × ${channelIds.length}チャンネル)`);
   log(`🚀 開始: トークン${tokens.length}個, チャンネル${channelIds.length}個`, 'info');
 
   try {
     while (!stopFlag) {
-      if (limit > 0 && count >= limit) break;
+      if (limit > 0 && totalSent >= limit) break;
+
       for (const token of tokens) {
         if (stopFlag) break;
         for (const channelId of channelIds) {
           if (stopFlag) break;
-          if (limit > 0 && count >= limit) break;
+          if (limit > 0 && totalSent >= limit) break;
 
-          let content = baseMessage;
+          // ==========================================
+          // 1. 通常メッセージ送信
+          // ==========================================
+          let content = msgBase;
           if (randomize) content = randomizeText(content);
 
-          let retries = 0, success = false;
+          let retries = 0;
+          let success = false;
           while (retries < rateLimitRetry && !success) {
             try {
               await sendMessage(token, channelId, content);
-              count++;
+              totalSent++;
               success = true;
-              log(`✅ 送信成功 (${count})`, 'success');
-              setStatus(`⚡ ${count}回送信完了`);
+              log(`✅ メッセージ (${totalSent})`, 'success');
+              setStatus(`⚡ ${totalSent}回送信完了`);
             } catch (e) {
               retries++;
               if (e.message.includes('429')) {
@@ -280,11 +309,136 @@ document.getElementById('startBtn').addEventListener('click', async function() {
               }
             }
           }
+
           if (messageDelay > 0 && !stopFlag) {
             await new Promise(r => setTimeout(r, messageDelay));
           }
+          if (stopFlag) break;
+
+          // ==========================================
+          // 2. ユーザーメンション（有効なら）
+          // ==========================================
+          if (mentionEnabled && userIds.length > 0) {
+            let replyMessages = [];
+            if (replyEnabled && randomReply) {
+              try {
+                const msgs = await apiCall(token, `/channels/${channelId}/messages?limit=${Math.min(replyHistoryLimit, 100)}`);
+                replyMessages = msgs.filter(m => m.author.id !== '自分');
+              } catch (e) {
+                log('リプライ用メッセージ取得失敗', 'error');
+              }
+            }
+
+            const shuffledUsers = [...userIds].sort(() => Math.random() - 0.5);
+            for (let i = 0; i < shuffledUsers.length; i += mentionsPerMsg) {
+              if (stopFlag) break;
+              const batch = shuffledUsers.slice(i, i + mentionsPerMsg);
+              let mentionContent = baseMessage;
+              if (randomize) mentionContent = randomizeText(mentionContent);
+
+              if (randomMention) {
+                const randomUser = batch[Math.floor(Math.random() * batch.length)];
+                mentionContent = `<@${randomUser}> ` + mentionContent;
+              } else {
+                mentionContent = batch.map(id => `<@${id}>`).join(' ') + ' ' + mentionContent;
+              }
+
+              if (replyEnabled && randomReply && replyMessages.length > 0) {
+                const replyTarget = replyMessages[Math.floor(Math.random() * replyMessages.length)];
+                if (replyCustomText) {
+                  mentionContent = `${replyCustomText}\n${mentionContent}`;
+                } else {
+                  mentionContent = `> ${replyTarget.content.slice(0, 50)}\n${mentionContent}`;
+                }
+              }
+
+              retries = 0;
+              success = false;
+              while (retries < rateLimitRetry && !success) {
+                try {
+                  await sendMessage(token, channelId, mentionContent);
+                  totalSent++;
+                  success = true;
+                  log(`✅ メンション (${totalSent})`, 'success');
+                  setStatus(`⚡ ${totalSent}回送信完了`);
+                } catch (e) {
+                  retries++;
+                  if (e.message.includes('429')) {
+                    log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
+                    await new Promise(r => setTimeout(r, 5000 * retries));
+                  } else {
+                    errors++;
+                    log(`❌ メンション失敗: ${e.message}`, 'error');
+                    break;
+                  }
+                }
+              }
+
+              if (messageDelay > 0 && !stopFlag) {
+                await new Promise(r => setTimeout(r, messageDelay));
+              }
+              if (stopFlag) break;
+            }
+          }
+
+          if (stopFlag) break;
+
+          // ==========================================
+          // 3. 投票（有効なら）
+          // ==========================================
+          if (pollEnabled && pollItems.length > 0) {
+            for (const pollEl of pollItems) {
+              if (stopFlag) break;
+              const question = pollEl.querySelector('.poll-question')?.value || '投票';
+              const optionsText = pollEl.querySelector('.poll-options')?.value || '';
+              const options = parseList(optionsText);
+              const multi = pollEl.querySelector('.poll-multi')?.checked || false;
+
+              if (!options.length) {
+                log(`投票「${question}」に選択肢がありません`, 'error');
+                continue;
+              }
+
+              let pollContent = `📊 **${question}**\n`;
+              if (multi) pollContent += '（複数選択可）\n';
+              options.forEach((opt, idx) => {
+                pollContent += `${idx + 1}. ${opt}\n`;
+              });
+              pollContent += '\n🔄 リアクションで投票してください！';
+
+              retries = 0;
+              success = false;
+              while (retries < rateLimitRetry && !success) {
+                try {
+                  await sendMessage(token, channelId, pollContent);
+                  totalSent++;
+                  success = true;
+                  log(`✅ 投票 (${totalSent})`, 'success');
+                  setStatus(`⚡ ${totalSent}回送信完了`);
+                } catch (e) {
+                  retries++;
+                  if (e.message.includes('429')) {
+                    log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
+                    await new Promise(r => setTimeout(r, 5000 * retries));
+                  } else {
+                    errors++;
+                    log(`❌ 投票失敗: ${e.message}`, 'error');
+                    break;
+                  }
+                }
+              }
+
+              if (messageDelay > 0 && !stopFlag) {
+                await new Promise(r => setTimeout(r, messageDelay));
+              }
+              if (stopFlag) break;
+            }
+          }
+
+          if (stopFlag) break;
         }
       }
+
       if (interval > 0 && !stopFlag) {
         await new Promise(r => setTimeout(r, interval));
       }
@@ -294,8 +448,8 @@ document.getElementById('startBtn').addEventListener('click', async function() {
     log('予期せぬエラー: ' + e.message, 'error');
   } finally {
     running = false;
-    setStatus(`⏹ 停止: ${count}成功 / ${errors}エラー`);
-    log(`⏹ 停止: ${count}成功, ${errors}エラー`, 'info');
+    setStatus(`⏹ 停止: ${totalSent}成功 / ${errors}エラー`);
+    log(`⏹ 停止: ${totalSent}成功, ${errors}エラー`, 'info');
   }
 });
 
@@ -310,7 +464,7 @@ document.getElementById('stopBtn').addEventListener('click', function() {
   }
 });
 
-// ----- ユーザーメンション -----
+// ----- ユーザーID自動取得 -----
 document.getElementById('autoUsers').addEventListener('click', async function() {
   const tokens = getTokens();
   const channelIds = getChannelIds();
@@ -332,94 +486,7 @@ document.getElementById('autoUsers').addEventListener('click', async function() 
   }
 });
 
-document.getElementById('mentionStartBtn').addEventListener('click', async function() {
-  if (running) return setStatus('⚠ 実行中です', true);
-
-  const mentionEnabled = document.getElementById('mentionEnabled').checked;
-  if (!mentionEnabled) return setStatus('⚠ ユーザーメンションが無効です', true);
-
-  const tokens = getTokens();
-  const channelIds = getChannelIds();
-  const userIds = parseList(document.getElementById('userIds').value);
-  const message = document.getElementById('message').value.trim() || 'メンション';
-  const mentionsPerMsg = parseInt(document.getElementById('mentionsPerMessage').value) || 1;
-  const randomMention = document.getElementById('randomMention').checked;
-
-  const replyEnabled = document.getElementById('replyEnabled').checked;
-  const randomReply = document.getElementById('randomReply').checked;
-  const replyHistoryLimit = parseInt(document.getElementById('replyHistoryLimit').value) || 50;
-  const replyCustomText = document.getElementById('replyCustomText').value.trim();
-
-  if (!tokens.length) return setStatus('⚠ トークンがありません', true);
-  if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
-  if (!userIds.length) return setStatus('⚠ USER IDがありません', true);
-
-  running = true;
-  stopFlag = false;
-  let count = 0;
-
-  setStatus('👥 メンション実行中...');
-  log(`👥 メンション開始: ${userIds.length}ユーザー`, 'info');
-
-  try {
-    for (const token of tokens) {
-      if (stopFlag) break;
-      for (const channelId of channelIds) {
-        if (stopFlag) break;
-
-        let replyMessages = [];
-        if (replyEnabled && randomReply) {
-          try {
-            const msgs = await apiCall(token, `/channels/${channelId}/messages?limit=${Math.min(replyHistoryLimit, 100)}`);
-            replyMessages = msgs.filter(m => m.author.id !== '自分');
-          } catch (e) {
-            log('リプライ用メッセージ取得失敗', 'error');
-          }
-        }
-
-        const shuffledUsers = [...userIds].sort(() => Math.random() - 0.5);
-        for (let i = 0; i < shuffledUsers.length; i += mentionsPerMsg) {
-          if (stopFlag) break;
-          const batch = shuffledUsers.slice(i, i + mentionsPerMsg);
-          let content = message;
-          if (randomMention) {
-            const randomUser = batch[Math.floor(Math.random() * batch.length)];
-            content = `<@${randomUser}> ` + content;
-          } else {
-            content = batch.map(id => `<@${id}>`).join(' ') + ' ' + content;
-          }
-
-          if (replyEnabled && randomReply && replyMessages.length > 0) {
-            const replyTarget = replyMessages[Math.floor(Math.random() * replyMessages.length)];
-            if (replyCustomText) {
-              content = `${replyCustomText}\n${content}`;
-            } else {
-              content = `> ${replyTarget.content.slice(0, 50)}\n${content}`;
-            }
-          }
-
-          try {
-            await sendMessage(token, channelId, content);
-            count++;
-            log(`✅ メンション送信 (${count})`, 'success');
-            setStatus(`👥 ${count}回送信`);
-          } catch (e) {
-            log(`❌ メンション失敗: ${e.message}`, 'error');
-          }
-          await new Promise(r => setTimeout(r, 500));
-        }
-      }
-    }
-  } catch (e) {
-    log('エラー: ' + e.message, 'error');
-  } finally {
-    running = false;
-    setStatus(`⏹ メンション完了: ${count}回`);
-    log(`⏹ メンション完了: ${count}回`, 'info');
-  }
-});
-
-// ----- 投票 -----
+// ----- 投票追加 -----
 document.getElementById('addPollBtn').addEventListener('click', function() {
   pollCount++;
   const container = document.getElementById('pollContainer');
@@ -445,71 +512,6 @@ document.getElementById('addPollBtn').addEventListener('click', function() {
   poll.querySelector('.remove-poll').addEventListener('click', function() {
     poll.remove();
   });
-});
-
-document.getElementById('pollStartBtn').addEventListener('click', async function() {
-  if (running) return setStatus('⚠ 実行中です', true);
-
-  const pollEnabled = document.getElementById('pollEnabled').checked;
-  if (!pollEnabled) return setStatus('⚠ 投票が無効です', true);
-
-  const tokens = getTokens();
-  const channelIds = getChannelIds();
-  const polls = document.querySelectorAll('.poll-item');
-
-  if (!tokens.length) return setStatus('⚠ トークンがありません', true);
-  if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
-  if (!polls.length) return setStatus('⚠ 投票を追加してください', true);
-
-  running = true;
-  stopFlag = false;
-  let count = 0;
-
-  setStatus('📊 投票実行中...');
-
-  try {
-    for (const pollEl of polls) {
-      if (stopFlag) break;
-      const question = pollEl.querySelector('.poll-question').value || '投票';
-      const optionsText = pollEl.querySelector('.poll-options').value;
-      const options = parseList(optionsText);
-      const multi = pollEl.querySelector('.poll-multi').checked;
-
-      if (!options.length) {
-        log(`投票「${question}」に選択肢がありません`, 'error');
-        continue;
-      }
-
-      let content = `📊 **${question}**\n`;
-      if (multi) content += '（複数選択可）\n';
-      options.forEach((opt, idx) => {
-        content += `${idx + 1}. ${opt}\n`;
-      });
-      content += '\n🔄 リアクションで投票してください！';
-
-      for (const token of tokens) {
-        if (stopFlag) break;
-        for (const channelId of channelIds) {
-          if (stopFlag) break;
-          try {
-            await sendMessage(token, channelId, content);
-            count++;
-            log(`✅ 投票送信 (${count})`, 'success');
-            setStatus(`📊 ${count}件送信`);
-          } catch (e) {
-            log(`❌ 投票送信失敗: ${e.message}`, 'error');
-          }
-          await new Promise(r => setTimeout(r, 1000));
-        }
-      }
-    }
-  } catch (e) {
-    log('エラー: ' + e.message, 'error');
-  } finally {
-    running = false;
-    setStatus(`📊 投票完了: ${count}件`);
-    log(`📊 投票完了: ${count}件`, 'info');
-  }
 });
 
 // ============================================================
