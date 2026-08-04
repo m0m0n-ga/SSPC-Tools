@@ -41,10 +41,14 @@ function getChannelIds() {
 async function apiCall(token, endpoint, method = 'GET', body = null) {
   const headers = {
     'Authorization': token,
-    'Content-Type': 'application/json',
     'User-Agent': 'SSPC-WebTools (https://github.com, 1.0)',
     'Accept': 'application/json',
   };
+
+  // DELETE のときは Content-Type を付けない（Discord API仕様）
+  if (method !== 'DELETE') {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const options = {
     method,
@@ -227,7 +231,7 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
 // Spam Tool
 // ============================================================
 
-// ----- チャンネル自動取得（強化版） -----
+// ----- チャンネル自動取得 -----
 document.getElementById('autoChannel').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -251,7 +255,7 @@ document.getElementById('autoChannel').addEventListener('click', async function(
   }
 });
 
-// ----- サーバー退出（強化版） -----
+// ----- サーバー退出（修正版） -----
 document.getElementById('leaveBtn').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -273,7 +277,6 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
         method: 'DELETE',
         headers: {
           'Authorization': token,
-          'Content-Type': 'application/json',
           'User-Agent': 'SSPC-WebTools (https://github.com, 1.0)',
           'Accept': 'application/json',
         }
@@ -287,21 +290,24 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
         log(`✅ 退出成功 (${i+1}/${tokens.length})`, 'success');
       } else if (res.status === 400) {
         fail++;
-        log(`❌ 退出失敗: HTTP 400 - サーバーIDが間違っているか、このサーバーに所属していません (${tokenPreview})`, 'error');
-        log(`💡 確認: サーバーID「${guildId}」が正しいか、このトークンでそのサーバーに参加しているか確認してください`, 'error');
+        if (responseText.includes('50109')) {
+          log(`❌ 退出失敗: HTTP 400 - API仕様エラー（DELETEにContent-Typeを送信）`, 'error');
+        } else {
+          log(`❌ 退出失敗: HTTP 400 - サーバーIDが間違っているか、このサーバーに所属していません`, 'error');
+        }
       } else if (res.status === 401) {
         fail++;
-        log(`❌ 退出失敗: HTTP 401 - トークンが無効です (${tokenPreview})`, 'error');
+        log(`❌ 退出失敗: HTTP 401 - トークンが無効です`, 'error');
       } else if (res.status === 403) {
         fail++;
-        log(`❌ 退出失敗: HTTP 403 - 権限がありません (${tokenPreview})`, 'error');
+        log(`❌ 退出失敗: HTTP 403 - 権限がありません`, 'error');
       } else {
         fail++;
-        log(`❌ 退出失敗: HTTP ${res.status} - ${responseText || '原因不明'} (${tokenPreview})`, 'error');
+        log(`❌ 退出失敗: HTTP ${res.status}`, 'error');
       }
     } catch (e) {
       fail++;
-      log(`❌ 退出失敗: ネットワークエラー - ${e.message} (${tokenPreview})`, 'error');
+      log(`❌ 退出失敗: ネットワークエラー - ${e.message}`, 'error');
     }
   }
 
@@ -309,7 +315,7 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
   log(`🚪 退出処理完了: 成功${ok} / 失敗${fail}`, 'info');
 });
 
-// ----- メッセージ送信（強化版） -----
+// ----- メッセージ送信 -----
 document.getElementById('startBtn').addEventListener('click', async function() {
   if (running) return setStatus('⚠ 実行中です', true);
 
@@ -530,7 +536,7 @@ document.getElementById('stopBtn').addEventListener('click', function() {
   }
 });
 
-// ----- ユーザーID自動取得（強化版） -----
+// ----- ユーザーID自動取得 -----
 document.getElementById('autoUsers').addEventListener('click', async function() {
   const tokens = getTokens();
   const channelIds = getChannelIds();
