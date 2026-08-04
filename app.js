@@ -62,10 +62,11 @@ function generateRandomString() {
 }
 
 function randomizeText(text) {
+  let result = text || '';
   const num = Math.floor(Math.random() * 9999);
   const names = ['Zero', 'Alpha', 'Omega', 'Strike', 'Viper', 'Ghost', 'Shadow', 'Blade'];
   const name = names[Math.floor(Math.random() * names.length)];
-  let result = text.replace(/{num}/g, num).replace(/{name}/g, name);
+  result = result.replace(/{num}/g, num).replace(/{name}/g, name);
   result = result + ' ' + generateRandomString();
   return result;
 }
@@ -213,7 +214,6 @@ document.getElementById('startBtn').addEventListener('click', async function() {
   const mentionsPerMsg = mentionEnabled ? parseInt(document.getElementById('mentionsPerMessage').value) || 1 : 1;
 
   const replyEnabled = document.getElementById('replyEnabled').checked;
-  const randomReply = replyEnabled ? document.getElementById('randomReply').checked : false;
   const replyHistoryLimit = replyEnabled ? parseInt(document.getElementById('replyHistoryLimit').value) || 50 : 50;
 
   const pollEnabled = document.getElementById('pollEnabled').checked;
@@ -262,198 +262,4 @@ document.getElementById('startBtn').addEventListener('click', async function() {
                 await new Promise(r => setTimeout(r, 5000 * retries));
               } else {
                 errors++;
-                log(`❌ 送信失敗: ${e.message}`, 'error');
-                break;
-              }
-            }
-          }
-
-          if (messageDelay > 0 && !stopFlag) {
-            await new Promise(r => setTimeout(r, messageDelay));
-          }
-          if (stopFlag) break;
-
-          if (mentionEnabled && userIds.length > 0) {
-            let replyMessages = [];
-            if (replyEnabled && randomReply) {
-              try {
-                const msgs = await apiCall(token, `/channels/${channelId}/messages?limit=${Math.min(replyHistoryLimit, 100)}`);
-                replyMessages = msgs.filter(m => m.author.id !== '自分');
-              } catch (e) {
-                log('リプライ用メッセージ取得失敗', 'error');
-              }
-            }
-
-            const shuffledUsers = [...userIds].sort(() => Math.random() - 0.5);
-            for (let i = 0; i < shuffledUsers.length; i += mentionsPerMsg) {
-              if (stopFlag) break;
-              const batch = shuffledUsers.slice(i, i + mentionsPerMsg);
-              let mentionContent = baseMessage;
-              if (randomize) mentionContent = randomizeText(mentionContent);
-
-              mentionContent = batch.map(id => `<@${id}>`).join(' ') + ' ' + mentionContent;
-
-              if (replyEnabled && randomReply && replyMessages.length > 0) {
-                const replyTarget = replyMessages[Math.floor(Math.random() * replyMessages.length)];
-                mentionContent = `> ${replyTarget.content.slice(0, 50)}\n${mentionContent}`;
-              }
-
-              retries = 0;
-              success = false;
-              while (retries < rateLimitRetry && !success) {
-                try {
-                  await sendMessage(token, channelId, mentionContent);
-                  totalSent++;
-                  success = true;
-                  log(`✅ メンション (${totalSent})`, 'success');
-                  setStatus(`⚡ ${totalSent}回送信完了`);
-                } catch (e) {
-                  retries++;
-                  if (e.message.includes('429')) {
-                    log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
-                    await new Promise(r => setTimeout(r, 5000 * retries));
-                  } else {
-                    errors++;
-                    log(`❌ メンション失敗: ${e.message}`, 'error');
-                    break;
-                  }
-                }
-              }
-
-              if (messageDelay > 0 && !stopFlag) {
-                await new Promise(r => setTimeout(r, messageDelay));
-              }
-              if (stopFlag) break;
-            }
-          }
-
-          if (stopFlag) break;
-
-          if (pollEnabled && pollItems.length > 0) {
-            for (const pollEl of pollItems) {
-              if (stopFlag) break;
-              const question = pollEl.querySelector('.poll-question')?.value || '投票';
-              const optionsText = pollEl.querySelector('.poll-options')?.value || '';
-              const options = parseList(optionsText);
-              const multi = pollEl.querySelector('.poll-multi')?.checked || false;
-
-              if (!options.length) {
-                log(`投票「${question}」に選択肢がありません`, 'error');
-                continue;
-              }
-
-              let pollContent = `📊 **${question}**\n`;
-              if (multi) pollContent += '（複数選択可）\n';
-              options.forEach((opt, idx) => {
-                pollContent += `${idx + 1}. ${opt}\n`;
-              });
-              pollContent += '\n🔄 リアクションで投票してください！';
-
-              retries = 0;
-              success = false;
-              while (retries < rateLimitRetry && !success) {
-                try {
-                  await sendMessage(token, channelId, pollContent);
-                  totalSent++;
-                  success = true;
-                  log(`✅ 投票 (${totalSent})`, 'success');
-                  setStatus(`⚡ ${totalSent}回送信完了`);
-                } catch (e) {
-                  retries++;
-                  if (e.message.includes('429')) {
-                    log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
-                    await new Promise(r => setTimeout(r, 5000 * retries));
-                  } else {
-                    errors++;
-                    log(`❌ 投票失敗: ${e.message}`, 'error');
-                    break;
-                  }
-                }
-              }
-
-              if (messageDelay > 0 && !stopFlag) {
-                await new Promise(r => setTimeout(r, messageDelay));
-              }
-              if (stopFlag) break;
-            }
-          }
-
-          if (stopFlag) break;
-        }
-      }
-
-      if (interval > 0 && !stopFlag) {
-        await new Promise(r => setTimeout(r, interval));
-      }
-    }
-  } catch (e) {
-    setStatus('❌ エラー', true);
-    log('予期せぬエラー: ' + e.message, 'error');
-  } finally {
-    running = false;
-    setStatus(`⏹ 停止: ${totalSent}成功 / ${errors}エラー`);
-    log(`⏹ 停止: ${totalSent}成功, ${errors}エラー`, 'info');
-  }
-});
-
-document.getElementById('stopBtn').addEventListener('click', function() {
-  if (running) {
-    stopFlag = true;
-    setStatus('⛔ 停止リクエスト送信');
-    log('停止リクエストを受信', 'info');
-  } else {
-    setStatus('⚠ 実行中ではありません', true);
-  }
-});
-
-document.getElementById('autoUsers').addEventListener('click', async function() {
-  const tokens = getTokens();
-  const channelIds = getChannelIds();
-  const limit = parseInt(document.getElementById('messageLimit').value) || 100;
-
-  if (!tokens.length) return setStatus('⚠ トークンがありません', true);
-  if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
-
-  try {
-    setStatus('👥 取得中...');
-    const data = await apiCall(tokens[0], `/channels/${channelIds[0]}/messages?limit=${Math.min(limit, 100)}`);
-    const userIds = [...new Set(data.map(m => m.author.id))];
-    document.getElementById('userIds').value = userIds.join('\n');
-    setStatus(`✅ ${userIds.length}人のユーザーを取得`);
-    log(`${userIds.length}人のユーザーIDを取得`, 'success');
-  } catch (e) {
-    setStatus('❌ 取得失敗', true);
-    log('ユーザー取得エラー: ' + e.message, 'error');
-  }
-});
-
-document.getElementById('addPollBtn').addEventListener('click', function() {
-  pollCount++;
-  const container = document.getElementById('pollContainer');
-  const poll = document.createElement('div');
-  poll.className = 'poll-item';
-  poll.dataset.pollId = pollCount;
-  poll.innerHTML = `
-    <div class="field">
-      <label>❓ 質問</label>
-      <input class="poll-question" value="質問 ${pollCount}">
-    </div>
-    <div class="field">
-      <label>📝 選択肢（改行区切り）</label>
-      <textarea class="poll-options" rows="3">選択肢1&#10;選択肢2</textarea>
-    </div>
-    <div class="checkbox-group">
-      <label><input type="checkbox" class="poll-multi"> 複数選択可</label>
-    </div>
-    <button class="btn-secondary remove-poll" data-id="${pollCount}">🗑 削除</button>
-  `;
-  container.appendChild(poll);
-
-  poll.querySelector('.remove-poll').addEventListener('click', function() {
-    poll.remove();
-  });
-});
-
-setStatus('⚠ トークンを入力してください');
-log('SSPC Web Tools ロード完了', 'info');
-log('⚠ このツールはDiscordの利用規約に違反します。自己責任で使用してください', 'error');
+                log(`❌ 送信
