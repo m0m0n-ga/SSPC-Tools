@@ -67,7 +67,9 @@ function randomizeText(text) {
   const names = ['Zero', 'Alpha', 'Omega', 'Strike', 'Viper', 'Ghost', 'Shadow', 'Blade'];
   const name = names[Math.floor(Math.random() * names.length)];
   result = result.replace(/{num}/g, num).replace(/{name}/g, name);
-  result = result + ' ' + generateRandomString();
+  const randStr = generateRandomString();
+  result = result + ' ' + randStr;
+  log(`ランダム文字列: ${randStr}`, 'info');
   return result;
 }
 
@@ -75,6 +77,7 @@ async function sendMessage(token, channelId, content) {
   return apiCall(token, `/channels/${channelId}/messages`, 'POST', { content });
 }
 
+// ===== タブ切り替え =====
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -84,6 +87,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+// ===== アコーディオン =====
 document.querySelectorAll('.accordion-header').forEach(header => {
   header.addEventListener('click', function() {
     const targetId = this.dataset.target;
@@ -94,6 +98,25 @@ document.querySelectorAll('.accordion-header').forEach(header => {
   });
 });
 
+// ===== 目玉ボタン（トークン表示切替） =====
+document.querySelectorAll('.toggle-visibility').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const targetId = this.dataset.target;
+    const textarea = document.getElementById(targetId);
+    if (!textarea) return;
+    if (this.classList.contains('hidden')) {
+      this.classList.remove('hidden');
+      textarea.style.webkitTextSecurity = 'none';
+      this.textContent = '👁️';
+    } else {
+      this.classList.add('hidden');
+      textarea.style.webkitTextSecurity = 'disc';
+      this.textContent = '🔒';
+    }
+  });
+});
+
+// ===== Token Checker =====
 document.getElementById('checkTokensBtn').addEventListener('click', async function() {
   const tokens = parseList(document.getElementById('checkTokens').value);
   const resultDiv = document.getElementById('tokenCheckResult');
@@ -121,8 +144,24 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
     badge.className = 'status-badge checking';
     badge.textContent = '🔍 チェック中...';
 
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-token-btn';
+    copyBtn.textContent = '📋';
+    copyBtn.title = 'トークンをコピー';
+    copyBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      navigator.clipboard.writeText(token).then(() => {
+        this.textContent = '✅';
+        setTimeout(() => { this.textContent = '📋'; }, 1500);
+      }).catch(() => {
+        this.textContent = '❌';
+        setTimeout(() => { this.textContent = '📋'; }, 1500);
+      });
+    });
+
     entry.appendChild(preview);
     entry.appendChild(badge);
+    entry.appendChild(copyBtn);
     resultDiv.appendChild(entry);
 
     try {
@@ -154,6 +193,7 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
   log(`チェック完了: 有効${valid} / 電話制限${locked} / 無効${invalid}`, 'info');
 });
 
+// ===== Spam Tool =====
 document.getElementById('autoChannel').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
