@@ -10,7 +10,10 @@
   <div class="container">
     <div class="header">
       <h1>⚡ SSPC Web Tools</h1>
-      <p class="subtitle">— Advanced Discord Suite —</p>
+      <p class="subtitle">— SSPC ON TOP —</p>
+      <div class="invite-link">
+        <a href="https://discord.gg/cnyEJQyyPw" target="_blank" class="join-link">join new SSPC！！</a>
+      </div>
     </div>
 
     <div class="tabs">
@@ -25,7 +28,10 @@
 
         <div class="field">
           <label>トークン</label>
-          <textarea id="spamTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+          <div class="token-input-wrapper">
+            <textarea id="spamTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+            <button type="button" class="toggle-visibility" data-target="spamTokens">👁️</button>
+          </div>
         </div>
 
         <div class="field">
@@ -177,7 +183,10 @@
 
         <div class="field">
           <label>チェックするトークン</label>
-          <textarea id="checkTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+          <div class="token-input-wrapper">
+            <textarea id="checkTokens" placeholder="カンマ / 改行 / スペースで区切る"></textarea>
+            <button type="button" class="toggle-visibility" data-target="checkTokens">👁️</button>
+          </div>
         </div>
 
         <button id="checkTokensBtn" class="btn-primary">🔍 チェック</button>
