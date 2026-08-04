@@ -1,3 +1,8 @@
+// ============================================================
+// SSPC Web Tools - 完成版
+// 注意: Discord利用規約に違反します。自己責任で使用してください。
+// ============================================================
+
 const API_BASE = 'https://discord.com/api/v9';
 
 let running = false;
@@ -6,6 +11,10 @@ let pollCount = 0;
 
 const statusDiv = document.getElementById('status');
 const logDiv = document.getElementById('log');
+
+// ============================================================
+// ユーティリティ
+// ============================================================
 
 function setStatus(msg, isError = false) {
   statusDiv.textContent = msg;
@@ -26,7 +35,7 @@ function parseList(text) {
 }
 
 function getTokens() {
-  return parseList(document.getElementById('tokens').value);
+  return parseList(document.getElementById('raidTokens').value);
 }
 
 function getChannelIds() {
@@ -59,26 +68,44 @@ function randomizeText(text) {
   const num = Math.floor(Math.random() * 9999);
   const names = ['Zero', 'Alpha', 'Omega', 'Strike', 'Viper', 'Ghost', 'Shadow', 'Blade'];
   const name = names[Math.floor(Math.random() * names.length)];
-  return text.replace(/{num}/g, num).replace(/{name}/g, name);
+  let result = text.replace(/{num}/g, num).replace(/{name}/g, name);
+  result = result.replace(/{rand16}/g, generateRandomString(16));
+  return result;
 }
 
 async function sendMessage(token, channelId, content) {
   return apiCall(token, `/channels/${channelId}/messages`, 'POST', { content });
 }
 
-// ===== アコーディオン =====
+// ============================================================
+// タブ切り替え
+// ============================================================
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ============================================================
+// アコーディオン開閉
+// ============================================================
+
 document.querySelectorAll('.accordion-header').forEach(header => {
   header.addEventListener('click', () => {
     const targetId = header.dataset.target;
     const body = document.getElementById(targetId);
-    const arrow = header.querySelector('.accordion-arrow');
     body.classList.toggle('open');
-    header.classList.toggle('active');
-    arrow.textContent = body.classList.contains('open') ? '▼' : '▶';
   });
 });
 
-// ===== トークンチェッカー =====
+// ============================================================
+// タブ1: Token Checker
+// ============================================================
+
 document.getElementById('checkTokensBtn').addEventListener('click', async () => {
   const tokens = parseList(document.getElementById('checkTokens').value);
   const resultDiv = document.getElementById('tokenCheckResult');
@@ -135,9 +162,15 @@ document.getElementById('checkTokensBtn').addEventListener('click', async () => 
   document.getElementById('validCount').textContent = valid;
   document.getElementById('lockedCount').textContent = locked;
   document.getElementById('invalidCount').textContent = invalid;
+
+  log(`チェック完了: 有効${valid} / 電話制限${locked} / 無効${invalid}`, 'info');
 });
 
-// ===== チャンネル自動取得 =====
+// ============================================================
+// タブ2: Raid Tool
+// ============================================================
+
+// ----- チャンネル自動取得 -----
 document.getElementById('autoChannel').addEventListener('click', async () => {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -150,12 +183,14 @@ document.getElementById('autoChannel').addEventListener('click', async () => {
     const textChannels = data.filter(c => c.type === 0).map(c => c.id);
     document.getElementById('channelIds').value = textChannels.join(', ');
     setStatus(`✅ ${textChannels.length}個のチャンネルを取得`);
+    log(`${textChannels.length}個のチャンネルを取得`, 'success');
   } catch (e) {
     setStatus('❌ 取得失敗', true);
+    log('チャンネル取得エラー: ' + e.message, 'error');
   }
 });
 
-// ===== サーバー退出 =====
+// ----- サーバー退出 -----
 document.getElementById('leaveBtn').addEventListener('click', async () => {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -168,27 +203,31 @@ document.getElementById('leaveBtn').addEventListener('click', async () => {
     try {
       await apiCall(token, `/users/@me/guilds/${guildId}`, 'DELETE');
       ok++;
+      log(`退出成功 (${token.slice(0,10)}...)`, 'success');
     } catch (e) {
       fail++;
+      log(`退出失敗: ${e.message}`, 'error');
     }
   }
   setStatus(`✅ 完了: 成功${ok} / 失敗${fail}`);
 });
 
-// ===== メッセージ送信 =====
+// ----- メッセージ送信（メイン実行） -----
 document.getElementById('startBtn').addEventListener('click', async () => {
   if (running) return setStatus('⚠ 実行中です', true);
 
   const tokens = getTokens();
   const channelIds = getChannelIds();
   const message = document.getElementById('message').value.trim();
-  const interval = parseInt(document.getElementById('sendInterval').value) || 1000;
-  const messageDelay = parseInt(document.getElementById('messageDelay').value) || 500;
-  const limit = parseInt(document.getElementById('limit').value) || 0;
   const mentionEveryone = document.getElementById('mentionEveryone').checked;
   const randomize = document.getElementById('randomize').checked;
-  const randomString = document.getElementById('randomString').checked;
-  const rateLimitRetry = parseInt(document.getElementById('rateLimitRetry').value) || 3;
+
+  // 送信設定（有効な場合のみ適用）
+  const settingsEnabled = document.getElementById('settingsEnabled').checked;
+  const interval = settingsEnabled ? parseInt(document.getElementById('sendInterval').value) || 1000 : 0;
+  const messageDelay = settingsEnabled ? parseInt(document.getElementById('messageDelay').value) || 500 : 0;
+  const rateLimitRetry = settingsEnabled ? parseInt(document.getElementById('rateLimitRetry').value) || 3 : 1;
+  const limit = settingsEnabled ? parseInt(document.getElementById('limit').value) || 0 : 0;
 
   if (!tokens.length) return setStatus('⚠ トークンがありません', true);
   if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
@@ -201,6 +240,7 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   const baseMessage = mentionEveryone ? '@everyone ' + message : message;
 
   setStatus(`⚡ 実行中 (${tokens.length}トークン × ${channelIds.length}チャンネル)`);
+  log(`🚀 開始: トークン${tokens.length}個, チャンネル${channelIds.length}個`, 'info');
 
   try {
     while (!stopFlag) {
@@ -213,7 +253,6 @@ document.getElementById('startBtn').addEventListener('click', async () => {
 
           let content = baseMessage;
           if (randomize) content = randomizeText(content);
-          if (randomString) content += ' ' + generateRandomString(16);
 
           let retries = 0, success = false;
           while (retries < rateLimitRetry && !success) {
@@ -221,14 +260,16 @@ document.getElementById('startBtn').addEventListener('click', async () => {
               await sendMessage(token, channelId, content);
               count++;
               success = true;
-              log(`✅ ${count}`, 'success');
+              log(`✅ 送信成功 (${count})`, 'success');
+              setStatus(`⚡ ${count}回送信完了`);
             } catch (e) {
               retries++;
               if (e.message.includes('429')) {
+                log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
                 await new Promise(r => setTimeout(r, 5000 * retries));
               } else {
                 errors++;
-                log(`❌ ${e.message}`, 'error');
+                log(`❌ 送信失敗: ${e.message}`, 'error');
                 break;
               }
             }
@@ -244,20 +285,26 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     }
   } catch (e) {
     setStatus('❌ エラー', true);
+    log('予期せぬエラー: ' + e.message, 'error');
   } finally {
     running = false;
     setStatus(`⏹ 停止: ${count}成功 / ${errors}エラー`);
+    log(`⏹ 停止: ${count}成功, ${errors}エラー`, 'info');
   }
 });
 
+// ----- スパム停止 -----
 document.getElementById('stopBtn').addEventListener('click', () => {
   if (running) {
     stopFlag = true;
     setStatus('⛔ 停止リクエスト送信');
+    log('停止リクエストを受信', 'info');
+  } else {
+    setStatus('⚠ 実行中ではありません', true);
   }
 });
 
-// ===== ユーザーメンション =====
+// ----- ユーザーメンション -----
 document.getElementById('autoUsers').addEventListener('click', async () => {
   const tokens = getTokens();
   const channelIds = getChannelIds();
@@ -272,23 +319,31 @@ document.getElementById('autoUsers').addEventListener('click', async () => {
     const userIds = [...new Set(data.map(m => m.author.id))];
     document.getElementById('userIds').value = userIds.join('\n');
     setStatus(`✅ ${userIds.length}人のユーザーを取得`);
+    log(`${userIds.length}人のユーザーIDを取得`, 'success');
   } catch (e) {
     setStatus('❌ 取得失敗', true);
+    log('ユーザー取得エラー: ' + e.message, 'error');
   }
 });
 
 document.getElementById('mentionStartBtn').addEventListener('click', async () => {
   if (running) return setStatus('⚠ 実行中です', true);
 
+  const mentionEnabled = document.getElementById('mentionEnabled').checked;
+  if (!mentionEnabled) return setStatus('⚠ ユーザーメンションが無効です', true);
+
   const tokens = getTokens();
   const channelIds = getChannelIds();
   const userIds = parseList(document.getElementById('userIds').value);
   const message = document.getElementById('message').value.trim() || 'メンション';
   const mentionsPerMsg = parseInt(document.getElementById('mentionsPerMessage').value) || 1;
-  const randomReply = document.getElementById('randomReply').checked;
   const randomMention = document.getElementById('randomMention').checked;
-  const randomString = document.getElementById('randomStringMention').checked;
-  const historyLimit = parseInt(document.getElementById('replyHistoryLimit').value) || 50;
+
+  // リプライ設定（有効な場合のみ）
+  const replyEnabled = document.getElementById('replyEnabled').checked;
+  const randomReply = document.getElementById('randomReply').checked;
+  const replyHistoryLimit = parseInt(document.getElementById('replyHistoryLimit').value) || 50;
+  const replyCustomText = document.getElementById('replyCustomText').value.trim();
 
   if (!tokens.length) return setStatus('⚠ トークンがありません', true);
   if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
@@ -299,6 +354,7 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
   let count = 0;
 
   setStatus('👥 メンション実行中...');
+  log(`👥 メンション開始: ${userIds.length}ユーザー`, 'info');
 
   try {
     for (const token of tokens) {
@@ -307,11 +363,13 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
         if (stopFlag) break;
 
         let replyMessages = [];
-        if (randomReply) {
+        if (replyEnabled && randomReply) {
           try {
-            const msgs = await apiCall(token, `/channels/${channelId}/messages?limit=${Math.min(historyLimit, 100)}`);
+            const msgs = await apiCall(token, `/channels/${channelId}/messages?limit=${Math.min(replyHistoryLimit, 100)}`);
             replyMessages = msgs.filter(m => m.author.id !== '自分');
-          } catch (e) {}
+          } catch (e) {
+            log('リプライ用メッセージ取得失敗', 'error');
+          }
         }
 
         const shuffledUsers = [...userIds].sort(() => Math.random() - 0.5);
@@ -325,19 +383,23 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
           } else {
             content = batch.map(id => `<@${id}>`).join(' ') + ' ' + content;
           }
-          if (randomString) content += ' ' + generateRandomString(16);
 
-          if (randomReply && replyMessages.length > 0) {
+          if (replyEnabled && randomReply && replyMessages.length > 0) {
             const replyTarget = replyMessages[Math.floor(Math.random() * replyMessages.length)];
-            content = `> ${replyTarget.content.slice(0, 50)}\n${content}`;
+            if (replyCustomText) {
+              content = `${replyCustomText}\n${content}`;
+            } else {
+              content = `> ${replyTarget.content.slice(0, 50)}\n${content}`;
+            }
           }
 
           try {
             await sendMessage(token, channelId, content);
             count++;
-            log(`✅ メンション ${count}`, 'success');
+            log(`✅ メンション送信 (${count})`, 'success');
+            setStatus(`👥 ${count}回送信`);
           } catch (e) {
-            log(`❌ ${e.message}`, 'error');
+            log(`❌ メンション失敗: ${e.message}`, 'error');
           }
           await new Promise(r => setTimeout(r, 500));
         }
@@ -348,10 +410,11 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
   } finally {
     running = false;
     setStatus(`⏹ メンション完了: ${count}回`);
+    log(`⏹ メンション完了: ${count}回`, 'info');
   }
 });
 
-// ===== 投票 =====
+// ----- 投票 -----
 document.getElementById('addPollBtn').addEventListener('click', () => {
   pollCount++;
   const container = document.getElementById('pollContainer');
@@ -381,6 +444,9 @@ document.getElementById('addPollBtn').addEventListener('click', () => {
 
 document.getElementById('pollStartBtn').addEventListener('click', async () => {
   if (running) return setStatus('⚠ 実行中です', true);
+
+  const pollEnabled = document.getElementById('pollEnabled').checked;
+  if (!pollEnabled) return setStatus('⚠ 投票が無効です', true);
 
   const tokens = getTokens();
   const channelIds = getChannelIds();
@@ -423,9 +489,10 @@ document.getElementById('pollStartBtn').addEventListener('click', async () => {
           try {
             await sendMessage(token, channelId, content);
             count++;
-            log(`✅ 投票 ${count}`, 'success');
+            log(`✅ 投票送信 (${count})`, 'success');
+            setStatus(`📊 ${count}件送信`);
           } catch (e) {
-            log(`❌ ${e.message}`, 'error');
+            log(`❌ 投票送信失敗: ${e.message}`, 'error');
           }
           await new Promise(r => setTimeout(r, 1000));
         }
@@ -436,9 +503,14 @@ document.getElementById('pollStartBtn').addEventListener('click', async () => {
   } finally {
     running = false;
     setStatus(`📊 投票完了: ${count}件`);
+    log(`📊 投票完了: ${count}件`, 'info');
   }
 });
 
-setStatus('⚠ トークンとサーバーIDを入力してください');
+// ============================================================
+// 初期化
+// ============================================================
+
+setStatus('⚠ トークンを入力してください');
 log('SSPC Web Tools ロード完了', 'info');
 log('⚠ このツールはDiscordの利用規約に違反します。自己責任で使用してください', 'error');
