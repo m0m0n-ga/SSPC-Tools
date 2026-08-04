@@ -17,12 +17,14 @@ const logDiv = document.getElementById('log');
 // ============================================================
 
 function setStatus(msg, isError = false) {
+  if (!statusDiv) return;
   statusDiv.textContent = msg;
   statusDiv.style.borderColor = isError ? '#4a1a1a' : '#1a2a3a';
   statusDiv.style.color = isError ? '#ff6a6a' : '#7a8a9a';
 }
 
 function log(msg, type = 'info') {
+  if (!logDiv) return;
   const entry = document.createElement('div');
   entry.className = `log-entry log-${type}`;
   entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
@@ -31,15 +33,18 @@ function log(msg, type = 'info') {
 }
 
 function parseList(text) {
+  if (!text) return [];
   return text.split(/[, \n]+/).map(s => s.trim()).filter(Boolean);
 }
 
 function getTokens() {
-  return parseList(document.getElementById('raidTokens').value);
+  const el = document.getElementById('raidTokens');
+  return el ? parseList(el.value) : [];
 }
 
 function getChannelIds() {
-  return parseList(document.getElementById('channelIds').value);
+  const el = document.getElementById('channelIds');
+  return el ? parseList(el.value) : [];
 }
 
 async function apiCall(token, endpoint, method = 'GET', body = null) {
@@ -82,11 +87,11 @@ async function sendMessage(token, channelId, content) {
 // ============================================================
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
+    this.classList.add('active');
+    document.getElementById(this.dataset.tab).classList.add('active');
   });
 });
 
@@ -95,10 +100,12 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ============================================================
 
 document.querySelectorAll('.accordion-header').forEach(header => {
-  header.addEventListener('click', () => {
-    const targetId = header.dataset.target;
+  header.addEventListener('click', function() {
+    const targetId = this.dataset.target;
     const body = document.getElementById(targetId);
-    body.classList.toggle('open');
+    if (body) {
+      body.classList.toggle('open');
+    }
   });
 });
 
@@ -106,7 +113,7 @@ document.querySelectorAll('.accordion-header').forEach(header => {
 // タブ1: Token Checker
 // ============================================================
 
-document.getElementById('checkTokensBtn').addEventListener('click', async () => {
+document.getElementById('checkTokensBtn').addEventListener('click', async function() {
   const tokens = parseList(document.getElementById('checkTokens').value);
   const resultDiv = document.getElementById('tokenCheckResult');
 
@@ -171,7 +178,7 @@ document.getElementById('checkTokensBtn').addEventListener('click', async () => 
 // ============================================================
 
 // ----- チャンネル自動取得 -----
-document.getElementById('autoChannel').addEventListener('click', async () => {
+document.getElementById('autoChannel').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
   if (!tokens.length) return setStatus('⚠ トークンがありません', true);
@@ -191,7 +198,7 @@ document.getElementById('autoChannel').addEventListener('click', async () => {
 });
 
 // ----- サーバー退出 -----
-document.getElementById('leaveBtn').addEventListener('click', async () => {
+document.getElementById('leaveBtn').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
   if (!tokens.length) return setStatus('⚠ トークンがありません', true);
@@ -213,7 +220,7 @@ document.getElementById('leaveBtn').addEventListener('click', async () => {
 });
 
 // ----- メッセージ送信（メイン実行） -----
-document.getElementById('startBtn').addEventListener('click', async () => {
+document.getElementById('startBtn').addEventListener('click', async function() {
   if (running) return setStatus('⚠ 実行中です', true);
 
   const tokens = getTokens();
@@ -222,7 +229,6 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   const mentionEveryone = document.getElementById('mentionEveryone').checked;
   const randomize = document.getElementById('randomize').checked;
 
-  // 送信設定（有効な場合のみ適用）
   const settingsEnabled = document.getElementById('settingsEnabled').checked;
   const interval = settingsEnabled ? parseInt(document.getElementById('sendInterval').value) || 1000 : 0;
   const messageDelay = settingsEnabled ? parseInt(document.getElementById('messageDelay').value) || 500 : 0;
@@ -294,7 +300,7 @@ document.getElementById('startBtn').addEventListener('click', async () => {
 });
 
 // ----- スパム停止 -----
-document.getElementById('stopBtn').addEventListener('click', () => {
+document.getElementById('stopBtn').addEventListener('click', function() {
   if (running) {
     stopFlag = true;
     setStatus('⛔ 停止リクエスト送信');
@@ -305,7 +311,7 @@ document.getElementById('stopBtn').addEventListener('click', () => {
 });
 
 // ----- ユーザーメンション -----
-document.getElementById('autoUsers').addEventListener('click', async () => {
+document.getElementById('autoUsers').addEventListener('click', async function() {
   const tokens = getTokens();
   const channelIds = getChannelIds();
   const limit = parseInt(document.getElementById('messageLimit').value) || 100;
@@ -326,7 +332,7 @@ document.getElementById('autoUsers').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('mentionStartBtn').addEventListener('click', async () => {
+document.getElementById('mentionStartBtn').addEventListener('click', async function() {
   if (running) return setStatus('⚠ 実行中です', true);
 
   const mentionEnabled = document.getElementById('mentionEnabled').checked;
@@ -339,7 +345,6 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
   const mentionsPerMsg = parseInt(document.getElementById('mentionsPerMessage').value) || 1;
   const randomMention = document.getElementById('randomMention').checked;
 
-  // リプライ設定（有効な場合のみ）
   const replyEnabled = document.getElementById('replyEnabled').checked;
   const randomReply = document.getElementById('randomReply').checked;
   const replyHistoryLimit = parseInt(document.getElementById('replyHistoryLimit').value) || 50;
@@ -415,7 +420,7 @@ document.getElementById('mentionStartBtn').addEventListener('click', async () =>
 });
 
 // ----- 投票 -----
-document.getElementById('addPollBtn').addEventListener('click', () => {
+document.getElementById('addPollBtn').addEventListener('click', function() {
   pollCount++;
   const container = document.getElementById('pollContainer');
   const poll = document.createElement('div');
@@ -437,12 +442,12 @@ document.getElementById('addPollBtn').addEventListener('click', () => {
   `;
   container.appendChild(poll);
 
-  poll.querySelector('.remove-poll').addEventListener('click', () => {
+  poll.querySelector('.remove-poll').addEventListener('click', function() {
     poll.remove();
   });
 });
 
-document.getElementById('pollStartBtn').addEventListener('click', async () => {
+document.getElementById('pollStartBtn').addEventListener('click', async function() {
   if (running) return setStatus('⚠ 実行中です', true);
 
   const pollEnabled = document.getElementById('pollEnabled').checked;
