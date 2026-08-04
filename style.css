@@ -1,15 +1,317 @@
-/* ===== 既存のスタイルに追加 ===== */
+/* ============================================================
+   SSPC Web Tools - 2カラム + アコーディオン
+   ============================================================ */
 
-/* トークンチェッカー結果表示 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0e14;
+  background-image: 
+    radial-gradient(ellipse at 20% 50%, rgba(0, 100, 200, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(0, 200, 255, 0.03) 0%, transparent 60%);
+  color: #c8d0dc;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  background: linear-gradient(160deg, #11181f, #080c11);
+  border: 1px solid #1a2a3a;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 0 60px rgba(0, 100, 200, 0.06), inset 0 0 80px rgba(0,0,0,0.4);
+}
+
+/* ===== ヘッダー ===== */
+.header {
+  text-align: center;
+  border-bottom: 1px solid #1a2a3a;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #6cb4ee;
+  text-shadow: 0 0 30px rgba(60, 180, 255, 0.1);
+  letter-spacing: 3px;
+}
+
+.header .subtitle {
+  color: #5a7a8a;
+  font-size: 13px;
+  letter-spacing: 5px;
+  font-weight: 300;
+  margin-top: 4px;
+}
+
+/* ===== 2カラムグリッド ===== */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== カード ===== */
+.card {
+  background: rgba(0, 120, 255, 0.03);
+  border: 1px solid #1a2a3a;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.card h2 {
+  color: #6cb4ee;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #1a2a3a;
+  padding-bottom: 10px;
+}
+
+.main-card h2 {
+  color: #6cb4ee;
+}
+
+.checker-card {
+  background: rgba(255, 170, 50, 0.03);
+  border-color: #2a3a2a;
+}
+
+.checker-card h2 {
+  color: #ffaa32;
+  border-bottom-color: #2a3a2a;
+}
+
+/* ===== フォーム要素 ===== */
+.field {
+  margin-bottom: 14px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a8a9a;
+  margin-bottom: 3px;
+  letter-spacing: 0.5px;
+}
+
+.hint {
+  font-size: 11px;
+  color: #4a5a6a;
+  margin-top: 3px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 8px 12px;
+  background: #080c11;
+  border: 1px solid #1a2a3a;
+  border-radius: 6px;
+  color: #c8d0dc;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  transition: 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #3a7aaa;
+  outline: none;
+  box-shadow: 0 0 16px rgba(60, 180, 255, 0.05);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 44px;
+}
+
+/* ===== 行レイアウト ===== */
+.row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.row .field {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* ===== チェックボックス ===== */
+.checkbox-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 6px 0 4px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #7a8a9a;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3a7aaa;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ===== アコーディオン ===== */
+.accordion {
+  margin: 8px 0 4px;
+  border: 1px solid #1a2a3a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(0, 120, 255, 0.04);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: #7a8a9a;
+  transition: 0.2s;
+  user-select: none;
+}
+
+.accordion-header:hover {
+  background: rgba(0, 120, 255, 0.08);
+  color: #8ad0ff;
+}
+
+.accordion-arrow {
+  transition: 0.3s;
+  font-size: 12px;
+}
+
+.accordion-header.active .accordion-arrow {
+  transform: rotate(90deg);
+}
+
+.accordion-body {
+  display: none;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid #1a2a3a;
+}
+
+.accordion-body.open {
+  display: block;
+}
+
+/* ===== ボタン ===== */
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0 4px;
+}
+
+button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+  letter-spacing: 0.5px;
+}
+
+button:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(145deg, #1a4a6a, #0d2a42);
+  color: #8ad0ff;
+  border: 1px solid #2a5a7a;
+}
+
+.btn-danger {
+  background: linear-gradient(145deg, #4a1a1a, #2a0a0a);
+  color: #ff6a6a;
+  border: 1px solid #5a2a2a;
+}
+
+.btn-warning {
+  background: linear-gradient(145deg, #3a3a1a, #1a1a0a);
+  color: #d4c9a8;
+  border: 1px solid #4a4a2a;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #6cb4ee;
+  border: 1px solid #1a3a5a;
+  padding: 4px 14px;
+  font-size: 11px;
+}
+
+.btn-secondary:hover {
+  background: #1a2a3a;
+  color: #8ad0ff;
+}
+
+/* ===== 投票アイテム ===== */
+.poll-item {
+  background: rgba(0, 120, 255, 0.03);
+  border: 1px solid #1a2a3a;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.poll-item .field {
+  margin-bottom: 8px;
+}
+
+/* ===== トークンチェッカー結果 ===== */
 .token-result {
   margin-top: 12px;
-  padding: 12px 16px;
+  padding: 10px 12px;
   background: #060a0e;
   border: 1px solid #1a2a3a;
   border-radius: 8px;
   font-family: 'Courier New', monospace;
-  font-size: 13px;
-  max-height: 200px;
+  font-size: 12px;
+  max-height: 220px;
   overflow-y: auto;
   display: none;
 }
@@ -19,12 +321,12 @@
 }
 
 .token-result .token-entry {
-  padding: 6px 8px;
+  padding: 5px 4px;
   border-bottom: 1px solid #0a1218;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .token-result .token-entry:last-child {
@@ -33,7 +335,7 @@
 
 .token-result .token-preview {
   color: #6a8a9a;
-  font-size: 12px;
+  font-size: 11px;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -41,9 +343,9 @@
 }
 
 .token-result .status-badge {
-  padding: 2px 12px;
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
@@ -77,4 +379,82 @@
 @keyframes pulse {
   from { opacity: 0.5; }
   to { opacity: 1; }
+}
+
+/* ===== チェッカー統計 ===== */
+.checker-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #6a8a9a;
+}
+
+.checker-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.checker-stats #validCount { color: #5ac8a0; font-weight: 700; }
+.checker-stats #lockedCount { color: #ffaa32; font-weight: 700; }
+.checker-stats #invalidCount { color: #ff6a6a; font-weight: 700; }
+
+/* ===== ステータス & ログ ===== */
+.status {
+  background: rgba(0, 120, 255, 0.04);
+  border: 1px solid #1a2a3a;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #7a8a9a;
+  font-size: 13px;
+  margin: 12px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.log {
+  background: #060a0e;
+  border: 1px solid #1a2a3a;
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #6a8a9a;
+  white-space: pre-wrap;
+}
+
+.log::-webkit-scrollbar {
+  width: 5px;
+}
+.log::-webkit-scrollbar-track {
+  background: #060a0e;
+}
+.log::-webkit-scrollbar-thumb {
+  background: #1a2a3a;
+  border-radius: 3px;
+}
+
+.log-entry {
+  padding: 2px 0;
+  border-bottom: 1px solid #0a1218;
+}
+
+.log-error { color: #ff6a6a; }
+.log-success { color: #5ac8a0; }
+.log-info { color: #6cb4ee; }
+
+/* ===== レスポンシブ ===== */
+@media (max-width: 700px) {
+  .container { padding: 14px; }
+  .header h1 { font-size: 22px; }
+  .row { flex-direction: column; gap: 0; }
+  .actions button { flex: 1; min-width: 70px; font-size: 11px; padding: 6px 12px; }
+  .main-grid { grid-template-columns: 1fr; gap: 16px; }
+  .card { padding: 14px; }
 }
