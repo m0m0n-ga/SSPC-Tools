@@ -1,8 +1,3 @@
-// ============================================================
-// SSPC Web Tools - 完成版
-// 注意: Discord利用規約に違反します。自己責任で使用してください。
-// ============================================================
-
 const API_BASE = 'https://discord.com/api/v9';
 
 let running = false;
@@ -11,10 +6,6 @@ let pollCount = 0;
 
 const statusDiv = document.getElementById('status');
 const logDiv = document.getElementById('log');
-
-// ============================================================
-// ユーティリティ
-// ============================================================
 
 function setStatus(msg, isError = false) {
   if (!statusDiv) return;
@@ -60,7 +51,8 @@ async function apiCall(token, endpoint, method = 'GET', body = null) {
   return res.json();
 }
 
-function generateRandomString(length = 16) {
+function generateRandomString() {
+  const length = Math.floor(Math.random() * 5) + 3;
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -74,17 +66,13 @@ function randomizeText(text) {
   const names = ['Zero', 'Alpha', 'Omega', 'Strike', 'Viper', 'Ghost', 'Shadow', 'Blade'];
   const name = names[Math.floor(Math.random() * names.length)];
   let result = text.replace(/{num}/g, num).replace(/{name}/g, name);
-  result = result.replace(/{rand16}/g, generateRandomString(16));
+  result = result + ' ' + generateRandomString();
   return result;
 }
 
 async function sendMessage(token, channelId, content) {
   return apiCall(token, `/channels/${channelId}/messages`, 'POST', { content });
 }
-
-// ============================================================
-// タブ切り替え
-// ============================================================
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
@@ -95,10 +83,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ============================================================
-// アコーディオン開閉
-// ============================================================
-
 document.querySelectorAll('.accordion-header').forEach(header => {
   header.addEventListener('click', function() {
     const targetId = this.dataset.target;
@@ -108,10 +92,6 @@ document.querySelectorAll('.accordion-header').forEach(header => {
     }
   });
 });
-
-// ============================================================
-// タブ1: Token Checker
-// ============================================================
 
 document.getElementById('checkTokensBtn').addEventListener('click', async function() {
   const tokens = parseList(document.getElementById('checkTokens').value);
@@ -173,11 +153,6 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
   log(`チェック完了: 有効${valid} / 電話制限${locked} / 無効${invalid}`, 'info');
 });
 
-// ============================================================
-// タブ2: Spam Tool
-// ============================================================
-
-// ----- チャンネル自動取得 -----
 document.getElementById('autoChannel').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -197,7 +172,6 @@ document.getElementById('autoChannel').addEventListener('click', async function(
   }
 });
 
-// ----- サーバー退出 -----
 document.getElementById('leaveBtn').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -219,44 +193,32 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
   setStatus(`✅ 完了: 成功${ok} / 失敗${fail}`);
 });
 
-// ============================================================
-// メイン実行（全部まとめてループ）
-// ============================================================
-
 document.getElementById('startBtn').addEventListener('click', async function() {
   if (running) return setStatus('⚠ 実行中です', true);
 
-  // ----- 入力値取得 -----
   const tokens = getTokens();
   const channelIds = getChannelIds();
   const baseMessage = document.getElementById('message').value.trim();
   const mentionEveryone = document.getElementById('mentionEveryone').checked;
   const randomize = document.getElementById('randomize').checked;
 
-  // 送信設定（オフならデフォルト値）
   const settingsEnabled = document.getElementById('settingsEnabled').checked;
   const interval = settingsEnabled ? parseInt(document.getElementById('sendInterval').value) || 1000 : 1000;
   const messageDelay = settingsEnabled ? parseInt(document.getElementById('messageDelay').value) || 500 : 500;
   const rateLimitRetry = settingsEnabled ? parseInt(document.getElementById('rateLimitRetry').value) || 3 : 3;
   const limit = settingsEnabled ? parseInt(document.getElementById('limit').value) || 0 : 0;
 
-  // ユーザーメンション
   const mentionEnabled = document.getElementById('mentionEnabled').checked;
   const userIds = mentionEnabled ? parseList(document.getElementById('userIds').value) : [];
   const mentionsPerMsg = mentionEnabled ? parseInt(document.getElementById('mentionsPerMessage').value) || 1 : 1;
-  const randomMention = mentionEnabled ? document.getElementById('randomMention').checked : false;
 
-  // リプライ
   const replyEnabled = document.getElementById('replyEnabled').checked;
   const randomReply = replyEnabled ? document.getElementById('randomReply').checked : false;
   const replyHistoryLimit = replyEnabled ? parseInt(document.getElementById('replyHistoryLimit').value) || 50 : 50;
-  const replyCustomText = replyEnabled ? document.getElementById('replyCustomText').value.trim() : '';
 
-  // 投票
   const pollEnabled = document.getElementById('pollEnabled').checked;
   const pollItems = pollEnabled ? document.querySelectorAll('.poll-item') : [];
 
-  // ----- バリデーション -----
   if (!tokens.length) return setStatus('⚠ トークンがありません', true);
   if (!channelIds.length) return setStatus('⚠ チャンネルIDがありません', true);
   if (!baseMessage) return setStatus('⚠ メッセージがありません', true);
@@ -266,7 +228,6 @@ document.getElementById('startBtn').addEventListener('click', async function() {
   let totalSent = 0;
   let errors = 0;
 
-  // メッセージベース
   const msgBase = mentionEveryone ? '@everyone ' + baseMessage : baseMessage;
 
   setStatus(`⚡ 実行中 (${tokens.length}トークン × ${channelIds.length}チャンネル)`);
@@ -282,9 +243,6 @@ document.getElementById('startBtn').addEventListener('click', async function() {
           if (stopFlag) break;
           if (limit > 0 && totalSent >= limit) break;
 
-          // ==========================================
-          // 1. 通常メッセージ送信
-          // ==========================================
           let content = msgBase;
           if (randomize) content = randomizeText(content);
 
@@ -315,9 +273,6 @@ document.getElementById('startBtn').addEventListener('click', async function() {
           }
           if (stopFlag) break;
 
-          // ==========================================
-          // 2. ユーザーメンション（有効なら）
-          // ==========================================
           if (mentionEnabled && userIds.length > 0) {
             let replyMessages = [];
             if (replyEnabled && randomReply) {
@@ -336,20 +291,11 @@ document.getElementById('startBtn').addEventListener('click', async function() {
               let mentionContent = baseMessage;
               if (randomize) mentionContent = randomizeText(mentionContent);
 
-              if (randomMention) {
-                const randomUser = batch[Math.floor(Math.random() * batch.length)];
-                mentionContent = `<@${randomUser}> ` + mentionContent;
-              } else {
-                mentionContent = batch.map(id => `<@${id}>`).join(' ') + ' ' + mentionContent;
-              }
+              mentionContent = batch.map(id => `<@${id}>`).join(' ') + ' ' + mentionContent;
 
               if (replyEnabled && randomReply && replyMessages.length > 0) {
                 const replyTarget = replyMessages[Math.floor(Math.random() * replyMessages.length)];
-                if (replyCustomText) {
-                  mentionContent = `${replyCustomText}\n${mentionContent}`;
-                } else {
-                  mentionContent = `> ${replyTarget.content.slice(0, 50)}\n${mentionContent}`;
-                }
+                mentionContent = `> ${replyTarget.content.slice(0, 50)}\n${mentionContent}`;
               }
 
               retries = 0;
@@ -383,9 +329,6 @@ document.getElementById('startBtn').addEventListener('click', async function() {
 
           if (stopFlag) break;
 
-          // ==========================================
-          // 3. 投票（有効なら）
-          // ==========================================
           if (pollEnabled && pollItems.length > 0) {
             for (const pollEl of pollItems) {
               if (stopFlag) break;
@@ -453,7 +396,6 @@ document.getElementById('startBtn').addEventListener('click', async function() {
   }
 });
 
-// ----- スパム停止 -----
 document.getElementById('stopBtn').addEventListener('click', function() {
   if (running) {
     stopFlag = true;
@@ -464,7 +406,6 @@ document.getElementById('stopBtn').addEventListener('click', function() {
   }
 });
 
-// ----- ユーザーID自動取得 -----
 document.getElementById('autoUsers').addEventListener('click', async function() {
   const tokens = getTokens();
   const channelIds = getChannelIds();
@@ -486,7 +427,6 @@ document.getElementById('autoUsers').addEventListener('click', async function() 
   }
 });
 
-// ----- 投票追加 -----
 document.getElementById('addPollBtn').addEventListener('click', function() {
   pollCount++;
   const container = document.getElementById('pollContainer');
@@ -513,10 +453,6 @@ document.getElementById('addPollBtn').addEventListener('click', function() {
     poll.remove();
   });
 });
-
-// ============================================================
-// 初期化
-// ============================================================
 
 setStatus('⚠ トークンを入力してください');
 log('SSPC Web Tools ロード完了', 'info');
