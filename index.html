@@ -149,21 +149,23 @@
               </label>
               <span class="toggle-label">投票を有効にする</span>
             </div>
-            <button id="addPollBtn" class="btn-secondary">➕ 投票を追加</button>
-            <div id="pollContainer">
-              <div class="poll-item">
-                <div class="field">
-                  <label>❓ 質問</label>
-                  <input class="poll-question" value="Vote now!">
-                </div>
-                <div class="field">
-                  <label>📝 選択肢（改行区切り）</label>
-                  <textarea class="poll-options" rows="3">Yes&#10;No</textarea>
-                </div>
-                <div class="checkbox-group">
-                  <label><input type="checkbox" class="poll-multi"> 複数選択可</label>
-                </div>
+            <div class="field">
+              <label>❓ 質問</label>
+              <input id="pollQuestion" placeholder="質問の内容は？" maxlength="300">
+              <span id="pollCharCount">0 / 300</span>
+            </div>
+            <div class="field">
+              <label>📝 回答（改行区切り）</label>
+              <textarea id="pollAnswers" rows="3" placeholder="回答1&#10;回答2"></textarea>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>⏱ 期間（時間）</label>
+                <input id="pollDuration" type="number" value="24" min="1" max="336">
               </div>
+            </div>
+            <div class="checkbox-group">
+              <label><input type="checkbox" id="pollMulti"> 複数回答を許可する</label>
             </div>
           </div>
         </div>
