@@ -17,7 +17,6 @@ body {
   overflow-x: hidden;
 }
 
-/* ===== サイバー背景アニメーション ===== */
 .cyber-bg {
   position: fixed;
   top: 0;
@@ -32,7 +31,6 @@ body {
   overflow: hidden;
 }
 
-/* グリッドライン */
 .cyber-bg::before {
   content: '';
   position: absolute;
@@ -52,7 +50,6 @@ body {
   100% { transform: translate(60px, 60px); }
 }
 
-/* フローティングドット */
 .cyber-bg::after {
   content: '';
   position: absolute;
@@ -80,7 +77,6 @@ body {
   100% { opacity: 1; transform: scale(1.05); }
 }
 
-/* サイバー光線（追加） */
 .cyber-bg .beam {
   position: absolute;
   width: 2px;
@@ -632,6 +628,7 @@ button:active {
   font-size: 12px;
   color: #6a8a9a;
   white-space: pre-wrap;
+  margin-top: 12px;
 }
 
 .log::-webkit-scrollbar {
