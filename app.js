@@ -6,19 +6,8 @@ let pollCount = 0;
 
 const statusDiv = document.getElementById('status');
 
-// ===== ログ関数（分離） =====
 function spamLog(msg, type = 'info') {
   const logDiv = document.getElementById('spamLog');
-  if (!logDiv) return;
-  const entry = document.createElement('div');
-  entry.className = `log-entry log-${type}`;
-  entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  logDiv.appendChild(entry);
-  logDiv.scrollTop = logDiv.scrollHeight;
-}
-
-function checkerLog(msg, type = 'info') {
-  const logDiv = document.getElementById('checkerLog');
   if (!logDiv) return;
   const entry = document.createElement('div');
   entry.className = `log-entry log-${type}`;
@@ -82,7 +71,6 @@ function randomizeText(text) {
   return result;
 }
 
-// ===== タブ切り替え =====
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -92,7 +80,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ===== アコーディオン =====
 document.querySelectorAll('.accordion-header').forEach(header => {
   header.addEventListener('click', function() {
     const targetId = this.dataset.target;
@@ -103,7 +90,6 @@ document.querySelectorAll('.accordion-header').forEach(header => {
   });
 });
 
-// ===== 目玉ボタン =====
 document.querySelectorAll('.toggle-visibility').forEach(btn => {
   btn.addEventListener('click', function() {
     const targetId = this.dataset.target;
@@ -121,7 +107,6 @@ document.querySelectorAll('.toggle-visibility').forEach(btn => {
   });
 });
 
-// ===== 投票文字数カウント =====
 const pollQuestionInput = document.getElementById('pollQuestion');
 if (pollQuestionInput) {
   pollQuestionInput.addEventListener('input', function() {
@@ -130,9 +115,6 @@ if (pollQuestionInput) {
   });
 }
 
-// ============================================================
-// Token Checker（チェック後に自動で無効トークンを削除）
-// ============================================================
 document.getElementById('checkTokensBtn').addEventListener('click', async function() {
   const input = document.getElementById('checkTokens');
   const tokens = parseList(input.value);
@@ -208,7 +190,6 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
     document.getElementById('validCount').textContent = remainingTokens.filter(t => !locked.includes(t)).length;
   }
 
-  // ステータス表示（残す）
   if (invalid.length > 0) {
     setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0（${invalid.length}個自動削除）`);
   } else {
@@ -216,7 +197,6 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
   }
 });
 
-// ===== コピーボタン =====
 document.getElementById('copyValidBtn').addEventListener('click', function() {
   const input = document.getElementById('checkTokens');
   const tokens = parseList(input.value);
@@ -232,9 +212,6 @@ document.getElementById('copyValidBtn').addEventListener('click', function() {
   });
 });
 
-// ============================================================
-// Spam Tool
-// ============================================================
 document.getElementById('autoChannel').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
