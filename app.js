@@ -210,33 +210,23 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
     document.getElementById('validCount').textContent = remainingTokens.filter(t => !locked.includes(t)).length;
   }
 
-  // ===== ログは1個だけ（チェック結果のみ） =====
-  const resultText = tokens.map((t, i) => {
-    const statusEl = resultDiv.querySelectorAll('.status-badge')[i];
-    return `${t} → ${statusEl ? statusEl.textContent : '不明'}`;
-  }).join('\n');
-  checkerLog(`📋 チェック結果 (${tokens.length}個)\n${resultText}`, 'success');
+  // ===== ログは出さない（完全に削除） =====
+  // checkerLogは呼ばない
 
-  // 削除した場合のステータス表示（画面上のみ）
-  if (invalid.length > 0) {
-    setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0（${invalid.length}個自動削除）`);
-  } else {
-    setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0`);
-  }
+  // ステータスも出さない（setStatusは呼ばない）
 });
 
-// ===== コピーボタン（有効なトークンをコピー） =====
+// ===== コピーボタン =====
 document.getElementById('copyValidBtn').addEventListener('click', function() {
   const input = document.getElementById('checkTokens');
   const tokens = parseList(input.value);
   if (!tokens.length) {
-    setStatus('⚠ 有効なトークンがありません', true);
+    setStatus('⚠ コピーするトークンがありません', true);
     return;
   }
   const text = tokens.join('\n');
   navigator.clipboard.writeText(text).then(() => {
-    setStatus(`✅ ${tokens.length}個の有効なトークンをコピーしました`);
-    checkerLog(`${tokens.length}個の有効なトークンをコピー`, 'success');
+    setStatus(`✅ ${tokens.length}個のトークンをコピーしました`);
   }).catch(() => {
     setStatus('❌ コピーに失敗しました', true);
   });
