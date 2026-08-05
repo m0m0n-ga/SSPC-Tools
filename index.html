@@ -7,7 +7,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="cyber-bg"></div>
+  <div class="cyber-bg">
+    <div class="beam"></div>
+    <div class="beam"></div>
+    <div class="beam"></div>
+    <div class="beam"></div>
+    <div class="beam"></div>
+  </div>
+
   <div class="container">
     <div class="header">
       <h1>⚡ SSPC Web Tools</h1>
@@ -176,6 +183,8 @@
           <button id="stopBtn" class="btn-danger">⛔ スパム停止</button>
           <button id="leaveBtn" class="btn-warning">🚪 サーバー退出</button>
         </div>
+
+        <div id="spamLog" class="log"></div>
       </div>
     </div>
 
@@ -196,6 +205,8 @@
 
         <div id="tokenCheckResult" class="token-result"></div>
 
+        <div id="checkerLog" class="log"></div>
+
         <div class="checker-stats">
           <span>✅ 有効: <span id="validCount">0</span></span>
           <span>📱 電話制限: <span id="lockedCount">0</span></span>
@@ -205,7 +216,6 @@
     </div>
 
     <div id="status" class="status">⚠ トークンを入力してください</div>
-    <div id="log" class="log"></div>
   </div>
 
   <script src="app.js"></script>
