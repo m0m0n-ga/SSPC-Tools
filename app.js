@@ -131,10 +131,11 @@ if (pollQuestionInput) {
 }
 
 // ============================================================
-// Token Checker
+// Token Checker（チェック後に自動で無効トークンを削除）
 // ============================================================
 document.getElementById('checkTokensBtn').addEventListener('click', async function() {
-  const tokens = parseList(document.getElementById('checkTokens').value);
+  const input = document.getElementById('checkTokens');
+  const tokens = parseList(input.value);
   const resultDiv = document.getElementById('tokenCheckResult');
 
   if (!tokens.length) {
@@ -146,7 +147,7 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
   resultDiv.innerHTML = '';
   resultDiv.classList.add('show');
 
-  let valid = 0, locked = 0, invalid = 0;
+  let valid = [], locked = [], invalid = [];
 
   for (const token of tokens) {
     const entry = document.createElement('div');
@@ -168,38 +169,80 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
       const data = await apiCall(token, '/users/@me');
       badge.className = 'status-badge valid';
       badge.textContent = `✅ ${data.username}`;
-      valid++;
+      valid.push(token);
     } catch (error) {
       if (error.message.includes('401')) {
         badge.className = 'status-badge invalid';
         badge.textContent = '❌ 無効';
-        invalid++;
+        invalid.push(token);
       } else if (error.message.includes('403')) {
         badge.className = 'status-badge locked';
         badge.textContent = '📱 電話制限';
-        locked++;
+        locked.push(token);
       } else {
         badge.className = 'status-badge invalid';
         badge.textContent = '❌ エラー';
-        invalid++;
+        invalid.push(token);
       }
     }
   }
 
-  document.getElementById('validCount').textContent = valid;
-  document.getElementById('lockedCount').textContent = locked;
-  document.getElementById('invalidCount').textContent = invalid;
+  // 統計表示を更新
+  document.getElementById('validCount').textContent = valid.length;
+  document.getElementById('lockedCount').textContent = locked.length;
+  document.getElementById('invalidCount').textContent = invalid.length;
 
-  checkerLog(`有効: ${valid} / 電話制限: ${locked} / 無効: ${invalid}`, 'info');
+  // ===== 自動削除：無効なトークンを入力欄から削除 =====
+  if (invalid.length > 0) {
+    const allTokens = parseList(input.value);
+    const remainingTokens = allTokens.filter(t => !invalid.includes(t));
+    input.value = remainingTokens.join('\n');
 
-  // 結果をテキストとしてコピーできるようにログに表示
-  const badges = resultDiv.querySelectorAll('.status-badge');
-  let resultText = '';
-  tokens.forEach((t, i) => {
-    const status = badges[i] ? badges[i].textContent : '不明';
-    resultText += `${t} → ${status}\n`;
-  });
+    // 結果表示から無効の行を削除（見た目だけ）
+    const entries = resultDiv.querySelectorAll('.token-entry');
+    entries.forEach(entry => {
+      const badge = entry.querySelector('.status-badge');
+      if (badge && badge.textContent.includes('無効')) {
+        entry.remove();
+      }
+    });
+
+    // 統計更新（lockedはそのまま、invalidは0に）
+    document.getElementById('invalidCount').textContent = 0;
+    document.getElementById('validCount').textContent = remainingTokens.filter(t => !locked.includes(t)).length;
+  }
+
+  // チェッカー専用ログ（1個だけ）
+  const resultText = tokens.map((t, i) => {
+    const statusEl = resultDiv.querySelectorAll('.status-badge')[i];
+    return `${t} → ${statusEl ? statusEl.textContent : '不明'}`;
+  }).join('\n');
   checkerLog(`📋 チェック結果 (${tokens.length}個)\n${resultText}`, 'success');
+
+  // 削除した場合のメッセージ
+  if (invalid.length > 0) {
+    checkerLog(`🗑 ${invalid.length}個の無効なトークンを自動削除しました`, 'success');
+    setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0（${invalid.length}個自動削除）`);
+  } else {
+    setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0`);
+  }
+});
+
+// ===== コピーボタン（有効なトークンをコピー） =====
+document.getElementById('copyValidBtn').addEventListener('click', function() {
+  const input = document.getElementById('checkTokens');
+  const tokens = parseList(input.value);
+  if (!tokens.length) {
+    setStatus('⚠ 有効なトークンがありません', true);
+    return;
+  }
+  const text = tokens.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    setStatus(`✅ ${tokens.length}個の有効なトークンをコピーしました`);
+    checkerLog(`${tokens.length}個の有効なトークンをコピー`, 'success');
+  }).catch(() => {
+    setStatus('❌ コピーに失敗しました', true);
+  });
 });
 
 // ============================================================
@@ -407,7 +450,7 @@ document.getElementById('stopBtn').addEventListener('click', function() {
   if (running) {
     stopFlag = true;
     setStatus('⛔ 停止');
-    spamLog('停止', 'info');
+    // 停止ボタン押したときのログは出さない（startBtnのfinallyで出す）
   } else {
     setStatus('⚠ 実行中ではありません', true);
   }
