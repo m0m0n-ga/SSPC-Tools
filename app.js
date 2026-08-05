@@ -120,8 +120,6 @@ if (pollQuestionInput) {
 }
 
 // ===== Token Checker =====
-let lastCheckResult = { valid: [], locked: [], invalid: [] };
-
 document.getElementById('checkTokensBtn').addEventListener('click', async function() {
   const tokens = parseList(document.getElementById('checkTokens').value);
   const resultDiv = document.getElementById('tokenCheckResult');
@@ -135,7 +133,7 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
   resultDiv.innerHTML = '';
   resultDiv.classList.add('show');
 
-  let valid = [], locked = [], invalid = [];
+  let valid = 0, locked = 0, invalid = 0;
 
   for (const token of tokens) {
     const entry = document.createElement('div');
@@ -157,73 +155,29 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
       const data = await apiCall(token, '/users/@me');
       badge.className = 'status-badge valid';
       badge.textContent = `✅ ${data.username}`;
-      valid.push(token);
+      valid++;
     } catch (error) {
       if (error.message.includes('401')) {
         badge.className = 'status-badge invalid';
         badge.textContent = '❌ 無効';
-        invalid.push(token);
+        invalid++;
       } else if (error.message.includes('403')) {
         badge.className = 'status-badge locked';
         badge.textContent = '📱 電話制限';
-        locked.push(token);
+        locked++;
       } else {
         badge.className = 'status-badge invalid';
         badge.textContent = '❌ エラー';
-        invalid.push(token);
+        invalid++;
       }
     }
   }
 
-  lastCheckResult = { valid, locked, invalid };
+  document.getElementById('validCount').textContent = valid;
+  document.getElementById('lockedCount').textContent = locked;
+  document.getElementById('invalidCount').textContent = invalid;
 
-  document.getElementById('validCount').textContent = valid.length;
-  document.getElementById('lockedCount').textContent = locked.length;
-  document.getElementById('invalidCount').textContent = invalid.length;
-
-  log(`チェック完了: 有効${valid.length} / 電話制限${locked.length} / 無効${invalid.length}`, 'info');
-});
-
-// ===== 有効なトークンをコピー =====
-document.getElementById('copyValidBtn').addEventListener('click', function() {
-  const validTokens = lastCheckResult.valid;
-  if (!validTokens.length) {
-    setStatus('⚠ 有効なトークンがありません', true);
-    return;
-  }
-  const text = validTokens.join('\n');
-  navigator.clipboard.writeText(text).then(() => {
-    setStatus(`✅ ${validTokens.length}個の有効なトークンをコピーしました`);
-    log(`${validTokens.length}個の有効なトークンをコピー`, 'success');
-  }).catch(() => {
-    setStatus('❌ コピーに失敗しました', true);
-  });
-});
-
-// ===== 無効なトークンを削除 =====
-document.getElementById('removeInvalidBtn').addEventListener('click', function() {
-  const invalidTokens = lastCheckResult.invalid;
-  if (!invalidTokens.length) {
-    setStatus('⚠ 無効なトークンがありません', true);
-    return;
-  }
-
-  const input = document.getElementById('checkTokens');
-  const allTokens = parseList(input.value);
-  const validTokens = allTokens.filter(t => !invalidTokens.includes(t));
-  input.value = validTokens.join('\n');
-
-  const resultDiv = document.getElementById('tokenCheckResult');
-  resultDiv.innerHTML = '';
-  resultDiv.classList.remove('show');
-
-  document.getElementById('validCount').textContent = validTokens.length;
-  document.getElementById('lockedCount').textContent = 0;
-  document.getElementById('invalidCount').textContent = 0;
-  lastCheckResult = { valid: [], locked: [], invalid: [] };
-
-  setStatus(`🗑 ${invalidTokens.length}個の無効なトークンを削除しました`);
-  log(`${invalidTokens.length}個の無効なトークンを削除`, 'success');
+  log(`有効: ${valid} / 電話制限: ${locked} / 無効: ${invalid}`, 'info');
 });
 
 // ===== Spam Tool =====
@@ -327,12 +281,14 @@ document.getElementById('startBtn').addEventListener('click', async function() {
           if (mentionEveryone) content = '@everyone ' + content;
           if (randomize) content = randomizeText(content);
 
+          // ユーザーメンション（サーバー内の全員が対象）
           if (mentionEnabled && userIds.length > 0) {
             const shuffled = [...userIds].sort(() => Math.random() - 0.5);
             const batch = shuffled.slice(0, mentionsPerMsg);
             content = batch.map(id => `<@${id}>`).join(' ') + ' ' + content;
           }
 
+          // リプライ対象（自分以外）
           let replyTarget = null;
           if (replyEnabled) {
             try {
