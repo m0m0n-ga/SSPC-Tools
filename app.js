@@ -187,12 +187,10 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
     }
   }
 
-  // 統計表示を更新（画面上のみ）
   document.getElementById('validCount').textContent = valid.length;
   document.getElementById('lockedCount').textContent = locked.length;
   document.getElementById('invalidCount').textContent = invalid.length;
 
-  // ===== 自動削除：無効なトークンを入力欄から削除 =====
   if (invalid.length > 0) {
     const allTokens = parseList(input.value);
     const remainingTokens = allTokens.filter(t => !invalid.includes(t));
@@ -210,10 +208,12 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
     document.getElementById('validCount').textContent = remainingTokens.filter(t => !locked.includes(t)).length;
   }
 
-  // ===== ログは出さない（完全に削除） =====
-  // checkerLogは呼ばない
-
-  // ステータスも出さない（setStatusは呼ばない）
+  // ステータス表示（残す）
+  if (invalid.length > 0) {
+    setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0（${invalid.length}個自動削除）`);
+  } else {
+    setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0`);
+  }
 });
 
 // ===== コピーボタン =====
