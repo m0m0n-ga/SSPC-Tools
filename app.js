@@ -5,22 +5,33 @@ let stopFlag = false;
 let pollCount = 0;
 
 const statusDiv = document.getElementById('status');
-const logDiv = document.getElementById('log');
 
-function setStatus(msg, isError = false) {
-  if (!statusDiv) return;
-  statusDiv.textContent = msg;
-  statusDiv.style.borderColor = isError ? '#4a1a1a' : '#1a2a3a';
-  statusDiv.style.color = isError ? '#ff6a6a' : '#7a8a9a';
-}
-
-function log(msg, type = 'info') {
+// ===== ログ関数（分離） =====
+function spamLog(msg, type = 'info') {
+  const logDiv = document.getElementById('spamLog');
   if (!logDiv) return;
   const entry = document.createElement('div');
   entry.className = `log-entry log-${type}`;
   entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
   logDiv.appendChild(entry);
   logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function checkerLog(msg, type = 'info') {
+  const logDiv = document.getElementById('checkerLog');
+  if (!logDiv) return;
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${type}`;
+  entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logDiv.appendChild(entry);
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function setStatus(msg, isError = false) {
+  if (!statusDiv) return;
+  statusDiv.textContent = msg;
+  statusDiv.style.borderColor = isError ? '#4a1a1a' : '#1a2a3a';
+  statusDiv.style.color = isError ? '#ff6a6a' : '#7a8a9a';
 }
 
 function parseList(text) {
@@ -119,7 +130,9 @@ if (pollQuestionInput) {
   });
 }
 
-// ===== Token Checker =====
+// ============================================================
+// Token Checker
+// ============================================================
 document.getElementById('checkTokensBtn').addEventListener('click', async function() {
   const tokens = parseList(document.getElementById('checkTokens').value);
   const resultDiv = document.getElementById('tokenCheckResult');
@@ -177,10 +190,21 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
   document.getElementById('lockedCount').textContent = locked;
   document.getElementById('invalidCount').textContent = invalid;
 
-  log(`有効: ${valid} / 電話制限: ${locked} / 無効: ${invalid}`, 'info');
+  checkerLog(`有効: ${valid} / 電話制限: ${locked} / 無効: ${invalid}`, 'info');
+
+  // 結果をテキストとしてコピーできるようにログに表示
+  const badges = resultDiv.querySelectorAll('.status-badge');
+  let resultText = '';
+  tokens.forEach((t, i) => {
+    const status = badges[i] ? badges[i].textContent : '不明';
+    resultText += `${t} → ${status}\n`;
+  });
+  checkerLog(`📋 チェック結果 (${tokens.length}個)\n${resultText}`, 'success');
 });
 
-// ===== Spam Tool =====
+// ============================================================
+// Spam Tool
+// ============================================================
 document.getElementById('autoChannel').addEventListener('click', async function() {
   const tokens = getTokens();
   const guildId = document.getElementById('guildId').value.trim();
@@ -193,10 +217,10 @@ document.getElementById('autoChannel').addEventListener('click', async function(
     const textChannels = data.filter(c => c.type === 0).map(c => c.id);
     document.getElementById('channelIds').value = textChannels.join(', ');
     setStatus(`✅ ${textChannels.length}個のチャンネルを取得`);
-    log(`${textChannels.length}個のチャンネルを取得`, 'success');
+    spamLog(`${textChannels.length}個のチャンネルを取得`, 'success');
   } catch (e) {
     setStatus('❌ 取得失敗', true);
-    log('チャンネル取得エラー: ' + e.message, 'error');
+    spamLog('チャンネル取得エラー: ' + e.message, 'error');
   }
 });
 
@@ -212,10 +236,10 @@ document.getElementById('leaveBtn').addEventListener('click', async function() {
     try {
       await apiCall(token, `/users/@me/guilds/${guildId}`, 'DELETE');
       ok++;
-      log(`退出成功 (${token.slice(0,10)}...)`, 'success');
+      spamLog(`退出成功 (${token.slice(0,10)}...)`, 'success');
     } catch (e) {
       fail++;
-      log(`退出失敗: ${e.message}`, 'error');
+      spamLog(`退出失敗: ${e.message}`, 'error');
     }
   }
   setStatus(`✅ 完了: 成功${ok} / 失敗${fail}`);
@@ -265,7 +289,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
   let errors = 0;
 
   setStatus(`⚡ 実行中 (${tokens.length}トークン × ${channelIds.length}チャンネル)`);
-  log(`🚀 開始`, 'info');
+  spamLog(`🚀 開始`, 'info');
 
   try {
     while (!stopFlag) {
@@ -281,14 +305,12 @@ document.getElementById('startBtn').addEventListener('click', async function() {
           if (mentionEveryone) content = '@everyone ' + content;
           if (randomize) content = randomizeText(content);
 
-          // ユーザーメンション（サーバー内の全員が対象）
           if (mentionEnabled && userIds.length > 0) {
             const shuffled = [...userIds].sort(() => Math.random() - 0.5);
             const batch = shuffled.slice(0, mentionsPerMsg);
             content = batch.map(id => `<@${id}>`).join(' ') + ' ' + content;
           }
 
-          // リプライ対象（自分以外）
           let replyTarget = null;
           if (replyEnabled) {
             try {
@@ -298,7 +320,7 @@ document.getElementById('startBtn').addEventListener('click', async function() {
                 replyTarget = replyMessages[Math.floor(Math.random() * replyMessages.length)];
               }
             } catch (e) {
-              log('リプライ用メッセージ取得失敗', 'error');
+              spamLog('リプライ用メッセージ取得失敗', 'error');
             }
           }
 
@@ -341,20 +363,20 @@ document.getElementById('startBtn').addEventListener('click', async function() {
 
               totalSent++;
               success = true;
-              log(`✅ 送信完了`, 'success');
+              spamLog(`✅ 送信完了`, 'success');
               setStatus(`⚡ ${totalSent}回送信完了`);
 
             } catch (e) {
               retries++;
               if (e.message.includes('429')) {
-                log(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
+                spamLog(`⚠ レート制限 (リトライ${retries}/${rateLimitRetry})`, 'info');
                 await new Promise(r => setTimeout(r, 5000 * retries));
               } else if (e.message.includes('403') && pollEnabled) {
-                log(`❌ 投票失敗: ユーザートークンではPollが作成できない可能性があります`, 'error');
+                spamLog(`❌ 投票失敗: ユーザートークンではPollが作成できない可能性があります`, 'error');
                 break;
               } else {
                 errors++;
-                log(`❌ 送信失敗: ${e.message}`, 'error');
+                spamLog(`❌ 送信失敗: ${e.message}`, 'error');
                 break;
               }
             }
@@ -373,11 +395,11 @@ document.getElementById('startBtn').addEventListener('click', async function() {
     }
   } catch (e) {
     setStatus('❌ エラー', true);
-    log('予期せぬエラー: ' + e.message, 'error');
+    spamLog('予期せぬエラー: ' + e.message, 'error');
   } finally {
     running = false;
     setStatus(`⏹ 停止: ${totalSent}成功 / ${errors}エラー`);
-    log(`⏹ 停止`, 'info');
+    spamLog(`⏹ 停止`, 'info');
   }
 });
 
@@ -385,7 +407,7 @@ document.getElementById('stopBtn').addEventListener('click', function() {
   if (running) {
     stopFlag = true;
     setStatus('⛔ 停止');
-    log('停止', 'info');
+    spamLog('停止', 'info');
   } else {
     setStatus('⚠ 実行中ではありません', true);
   }
@@ -405,10 +427,10 @@ document.getElementById('autoUsers').addEventListener('click', async function() 
     const userIds = [...new Set(data.map(m => m.author.id))];
     document.getElementById('userIds').value = userIds.join('\n');
     setStatus(`✅ ${userIds.length}人のユーザーを取得`);
-    log(`${userIds.length}人のユーザーIDを取得`, 'success');
+    spamLog(`${userIds.length}人のユーザーIDを取得`, 'success');
   } catch (e) {
     setStatus('❌ 取得失敗', true);
-    log('ユーザー取得エラー: ' + e.message, 'error');
+    spamLog('ユーザー取得エラー: ' + e.message, 'error');
   }
 });
 
@@ -440,5 +462,5 @@ document.getElementById('addPollBtn').addEventListener('click', function() {
 });
 
 setStatus('⚠ トークンを入力してください');
-log('SSPC Web Tools ロード完了', 'info');
-log('⚠ このツールはDiscordの利用規約に違反します。自己責任で使用してください', 'error');
+spamLog('SSPC Web Tools ロード完了', 'info');
+spamLog('⚠ このツールはDiscordの利用規約に違反します。自己責任で使用してください', 'error');
