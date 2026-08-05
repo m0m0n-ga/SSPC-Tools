@@ -17,7 +17,6 @@ body {
   overflow-x: hidden;
 }
 
-/* ===== サイバー背景アニメーション ===== */
 .cyber-bg {
   position: fixed;
   top: 0;
@@ -563,18 +562,6 @@ button:active {
 @keyframes pulse {
   from { opacity: 0.5; }
   to { opacity: 1; }
-}
-
-.checker-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.checker-actions .btn-secondary {
-  font-size: 12px;
-  padding: 6px 14px;
 }
 
 .checker-stats {
