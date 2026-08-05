@@ -202,16 +202,12 @@
           </div>
         </div>
 
-        <button id="checkTokensBtn" class="btn-primary">🔍 チェック</button>
-
-        <div id="tokenCheckResult" class="token-result"></div>
-
-        <div class="checker-actions">
-          <button id="copyValidBtn" class="btn-secondary">📋 有効なトークンをコピー</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+          <button id="checkTokensBtn" class="btn-primary">🔍 チェック</button>
+          <button id="copyValidBtn" class="btn-secondary">📋 コピー</button>
         </div>
 
-        <!-- チェッカー専用ログ -->
-        <div id="checkerLog" class="log"></div>
+        <div id="tokenCheckResult" class="token-result"></div>
 
         <div class="checker-stats">
           <span>✅ 有効: <span id="validCount">0</span></span>
