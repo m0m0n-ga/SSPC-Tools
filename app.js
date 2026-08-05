@@ -187,7 +187,7 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
     }
   }
 
-  // 統計表示を更新
+  // 統計表示を更新（画面上のみ）
   document.getElementById('validCount').textContent = valid.length;
   document.getElementById('lockedCount').textContent = locked.length;
   document.getElementById('invalidCount').textContent = invalid.length;
@@ -198,7 +198,6 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
     const remainingTokens = allTokens.filter(t => !invalid.includes(t));
     input.value = remainingTokens.join('\n');
 
-    // 結果表示から無効の行を削除（見た目だけ）
     const entries = resultDiv.querySelectorAll('.token-entry');
     entries.forEach(entry => {
       const badge = entry.querySelector('.status-badge');
@@ -207,21 +206,19 @@ document.getElementById('checkTokensBtn').addEventListener('click', async functi
       }
     });
 
-    // 統計更新（lockedはそのまま、invalidは0に）
     document.getElementById('invalidCount').textContent = 0;
     document.getElementById('validCount').textContent = remainingTokens.filter(t => !locked.includes(t)).length;
   }
 
-  // チェッカー専用ログ（1個だけ）
+  // ===== ログは1個だけ（チェック結果のみ） =====
   const resultText = tokens.map((t, i) => {
     const statusEl = resultDiv.querySelectorAll('.status-badge')[i];
     return `${t} → ${statusEl ? statusEl.textContent : '不明'}`;
   }).join('\n');
   checkerLog(`📋 チェック結果 (${tokens.length}個)\n${resultText}`, 'success');
 
-  // 削除した場合のメッセージ
+  // 削除した場合のステータス表示（画面上のみ）
   if (invalid.length > 0) {
-    checkerLog(`🗑 ${invalid.length}個の無効なトークンを自動削除しました`, 'success');
     setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0（${invalid.length}個自動削除）`);
   } else {
     setStatus(`✅ 有効: ${valid.length} / 電話制限: ${locked.length} / 無効: 0`);
@@ -450,7 +447,6 @@ document.getElementById('stopBtn').addEventListener('click', function() {
   if (running) {
     stopFlag = true;
     setStatus('⛔ 停止');
-    // 停止ボタン押したときのログは出さない（startBtnのfinallyで出す）
   } else {
     setStatus('⚠ 実行中ではありません', true);
   }
